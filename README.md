@@ -111,6 +111,15 @@ boats, and the water tag so anything that asks "is this water?" says yes. A flui
 water but does not behave like it is a trap, not a feature - players will treat it as water, because
 it is water, just dirty.
 
+Silt only stays put in a puddle of its own: muddy water touching open clean water runs clear again,
+so a wallow dug into the edge of a pond dilutes instead of leaving half a pool brown against half a
+pool blue with a hard seam down the middle. The rule is the one you would guess - a wallow is a hole
+in the mud, sealed off from the lake.
+
+Because it carries the water tag, **lava treats it exactly as water**: stone, cobblestone and
+obsidian form the same way. Submerged, it looks the part too - the fog goes brown and visibility
+drops to a few blocks, because silt is opaque.
+
 Two things are its own: it creeps rather than flows, and it **drags**. Wading through a wallow costs
 you about a third of your speed (`pig.muddyWaterDrag`), which is what makes it read as mud rather
 than as brown water. It comes with a bucket.

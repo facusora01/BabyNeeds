@@ -2,8 +2,17 @@ package com.babyneeds;
 
 import java.util.function.Consumer;
 
+import org.joml.Vector3f;
+
+import com.mojang.blaze3d.shaders.FogShape;
+import com.mojang.blaze3d.systems.RenderSystem;
+
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -89,6 +98,30 @@ public class ModFluids {
                         @Override
                         public int getTintColor() {
                             return TINT;
+                        }
+
+                        @Override
+                        public ResourceLocation getRenderOverlayTexture(Minecraft minecraft) {
+                            // The same "you are underwater" overlay as water: being in a wallow
+                            // should look like being in water, only filthier.
+                            return new ResourceLocation("textures/misc/underwater.png");
+                        }
+
+                        @Override
+                        public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level,
+                                                       int renderDistance, float darkenWorldAmount,
+                                                       Vector3f fluidFogColor) {
+                            return new Vector3f(0.26f, 0.20f, 0.11f);
+                        }
+
+                        @Override
+                        public void modifyFogRender(Camera camera, FogRenderer.FogMode mode,
+                                                    float renderDistance, float partialTick,
+                                                    float nearDistance, float farDistance,
+                                                    FogShape shape) {
+                            // Silt is opaque: a few blocks of visibility rather than water's dozens.
+                            RenderSystem.setShaderFogStart(-2.0f);
+                            RenderSystem.setShaderFogEnd(4.0f);
                         }
                     });
                 }

@@ -52,12 +52,28 @@ public final class MuddyWater {
             // Only still water silts up; a flowing edge is left to sort itself out.
             if (!state.getFluidState().isSource()) continue;
 
-            boolean shouldBeMuddy = mudContact(level, pos) >= MUD_CONTACT_NEEDED;
+            boolean shouldBeMuddy = mudContact(level, pos) >= MUD_CONTACT_NEEDED
+                    && !touchesCleanWater(level, pos);
             if (shouldBeMuddy == muddy) continue;
 
             Block target = shouldBeMuddy ? ModBlocks.MUDDY_WATER_BLOCK.get() : Blocks.WATER;
             level.setBlock(pos.immutable(), target.defaultBlockState(), Block.UPDATE_ALL);
         }
+    }
+
+    /**
+     * Silt only stays put in a puddle of its own. Open water dilutes it, so a wallow dug into the
+     * edge of a pond runs clear instead of leaving half a pool brown against half a pool blue with
+     * a hard seam down the middle - which is both wrong to look at and wrong about how silt works.
+     * The rule the player learns is simple: a wallow is a hole in the mud, sealed off from the lake.
+     */
+    private static boolean touchesCleanWater(LevelAccessor level, BlockPos pos) {
+        for (Direction direction : Direction.values()) {
+            if (level.getBlockState(pos.relative(direction)).is(Blocks.WATER)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static int mudContact(LevelAccessor level, BlockPos pos) {
