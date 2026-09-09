@@ -53,10 +53,13 @@ public class RamGoal extends Goal {
         if (distanceSq < MIN_RANGE * MIN_RANGE || distanceSq > MAX_RANGE * MAX_RANGE) return false;
         if (!animal.getSensing().hasLineOfSight(current)) return false;
 
-        // Rolled once per opportunity rather than once per tick, so "a third of the time" means a
-        // third of her attacks rather than a certainty within half a second.
+        // Rolled once per opportunity rather than once per tick, so the odds mean what they say
+        // instead of becoming a certainty within half a second. The further off the target is, the
+        // likelier she is to take the run at them.
         cooldown = Config.RAM_COOLDOWN_TICKS.get();
-        if (animal.getRandom().nextDouble() >= Config.RAM_CHANCE.get()) return false;
+        double chance = RamCalculator.chance(Math.sqrt(distanceSq), MIN_RANGE, MAX_RANGE,
+                Config.RAM_CHANCE_NEAR.get(), Config.RAM_CHANCE_FAR.get());
+        if (animal.getRandom().nextDouble() >= chance) return false;
 
         this.target = current;
         return true;

@@ -367,11 +367,18 @@ public class Config {
                     "over at walking pace is an escort, not a defence: 1.9 is a run.")
             .defineInRange("motherhood.defendSpeed", 1.9, 0.5, 5.0);
 
-    public static final ForgeConfigSpec.DoubleValue RAM_CHANCE = BUILDER
-            .comment("Chance a defending cow rams instead of simply chasing, rolled once per",
-                    "opportunity rather than per tick. The ram is the goat's move: she plants",
-                    "herself, drops her head, and runs the whole distance in a straight line.")
-            .defineInRange("motherhood.ramChance", 0.3, 0.0, 1.0);
+    public static final ForgeConfigSpec.DoubleValue RAM_CHANCE_NEAR = BUILDER
+            .comment("Chance a defending cow rams rather than simply chasing, when the target is as",
+                    "close as she will bother charging from. A ram is a run-up: standing on top of",
+                    "someone there is nothing to run, so she mostly shoves instead.")
+            .defineInRange("motherhood.ramChanceNear", 0.08, 0.0, 1.0);
+
+    public static final ForgeConfigSpec.DoubleValue RAM_CHANCE_FAR = BUILDER
+            .comment("The same chance at the far edge of her range, where distance is exactly what",
+                    "the move is for. The odds climb between the two, so backing away from a cow",
+                    "whose calf you just hit is the worst thing you can do. Halfway across her range",
+                    "these defaults come out at about a third, which is where the flat number was.")
+            .defineInRange("motherhood.ramChanceFar", 0.55, 0.0, 1.0);
 
     public static final ForgeConfigSpec.DoubleValue RAM_KNOCKBACK = BUILDER
             .comment("How far the impact throws whoever it catches.")

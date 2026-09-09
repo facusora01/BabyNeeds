@@ -169,7 +169,10 @@ close to decides, once, whether to take it on:
 And **a mother goes after whoever hurts her baby**, at a run rather than a walk. Farm animals have no
 attack damage in vanilla, so the mod gives them some.
 
-A cow has one move beyond the chase: roughly a third of the time she **rams**, the way a goat does.
+A cow has one move beyond the chase: she **rams**, the way a goat does, and **the further away you
+are the likelier she is to do it** - a ram is a run-up, so standing on top of her there is nothing to
+run and she mostly shoves, while backing off across her range is the worst thing you can do. Halfway
+across it the odds are about a third.
 She plants herself, drops her head - a wind-up you can see coming and dodge - and then runs the whole
 distance in a straight line, hitting whatever is at the end of it and throwing them clear. The charge
 does not steer once committed, because a charge that follows a dodging player is not a charge, it is
@@ -253,7 +256,8 @@ default implies in real minutes. The headline knobs:
 - `pig.siltingTicks` / `pig.soilToMudTicks` - how fast a wallow forms and beds itself in
 - `motherhood.adoptionChance` - the odds an adult takes an orphan on
 - `motherhood.defendBabies` / `motherhood.defendRadius` - whether mothers retaliate, and how far
-- `motherhood.ramChance` / `motherhood.ramKnockback` - how often a cow rams, and how hard
+- `motherhood.ramChanceNear` / `motherhood.ramChanceFar` - how the odds of a ram climb with distance
+- `motherhood.ramKnockback` / `motherhood.ramDamage` - how hard it lands
 - `loot.juvenileYield` - how much less an adolescent carcass is worth than a grown one
 - `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal
