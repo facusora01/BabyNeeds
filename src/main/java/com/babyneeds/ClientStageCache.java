@@ -20,8 +20,7 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = BabyNeeds.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public final class ClientStageCache {
 
-    /** Seconds a full lie-down or sit-down takes. Slow enough to read as an animal deciding to. */
-    private static final float LIE_DOWN_SECONDS = 1.1f;
+    /** Seconds a full sit-down takes. Slow enough to read as an animal deciding to. */
     private static final float SIT_DOWN_SECONDS = 0.7f;
     /** A neck moves far faster than a whole body: this is a dip, not a fold. */
     private static final float HEAD_DOWN_SECONDS = 0.35f;
@@ -71,7 +70,8 @@ public final class ClientStageCache {
             delta = Math.min(Math.max(delta, 0.0f), 0.1f);
             poseSeconds += delta;
 
-            sideProgress = approach(sideProgress, pose.isOnSide() ? 1.0f : 0.0f, delta / LIE_DOWN_SECONDS);
+            float lieSeconds = Math.max(0.05f, Config.LIE_SECONDS.get().floatValue());
+            sideProgress = approach(sideProgress, pose.isOnSide() ? 1.0f : 0.0f, delta / lieSeconds);
             sitProgress = approach(sitProgress, pose == PigPose.SITTING ? 1.0f : 0.0f, delta / SIT_DOWN_SECONDS);
             headDownProgress = approach(headDownProgress, pose == PigPose.HEAD_DOWN ? 1.0f : 0.0f,
                     delta / HEAD_DOWN_SECONDS);

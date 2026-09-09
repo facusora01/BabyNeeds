@@ -350,6 +350,38 @@ public class Config {
             .comment("How far the front legs slide forwards (negative) or backwards (positive).")
             .defineInRange("animation.sitFrontShift", 0.3, -8.0, 8.0);
 
+    public static final ForgeConfigSpec.DoubleValue LIE_ANGLE = BUILDER
+            .comment("How far an animal rolls onto its flank when it lies down, in degrees. 90 is",
+                    "flat on its side, which is what a nursing sow needs to be so her litter can",
+                    "reach her.")
+            .defineInRange("animation.lieAngle", 90.0, 0.0, 180.0);
+
+    public static final ForgeConfigSpec.DoubleValue LIE_LIFT = BUILDER
+            .comment("How far the body rises as it rolls, in blocks. An animal on its side is about",
+                    "half its standing width off the ground; too much and it visibly floats, too",
+                    "little and its flank sinks through the floor.")
+            .defineInRange("animation.lieLift", 0.24, -1.0, 1.0);
+
+    public static final ForgeConfigSpec.DoubleValue LIE_SECONDS = BUILDER
+            .comment("Seconds a full lie-down takes. The client eases across this on its own, so the",
+                    "whole animation still costs exactly one packet.")
+            .defineInRange("animation.lieSeconds", 1.1, 0.1, 10.0);
+
+    public static final ForgeConfigSpec.DoubleValue WALLOW_ROCK_ANGLE = BUILDER
+            .comment("How far a wallowing animal rocks either side of flat, in degrees. This is the",
+                    "motion that actually works mud into a hide.")
+            .defineInRange("animation.wallowRockAngle", 55.0, 0.0, 90.0);
+
+    public static final ForgeConfigSpec.DoubleValue WALLOW_ROCK_SPEED = BUILDER
+            .comment("How fast it rocks, in radians per second. Too fast reads as a seizure rather",
+                    "than a pig enjoying itself.")
+            .defineInRange("animation.wallowRockSpeed", 1.9, 0.1, 10.0);
+
+    public static final ForgeConfigSpec.DoubleValue WALLOW_SINK = BUILDER
+            .comment("How far a wallowing animal settles into the mud, in blocks, on top of the roll.",
+                    "A pig in a proper wallow is half buried in it.")
+            .defineInRange("animation.wallowSink", 0.0, 0.0, 0.8);
+
     // ---------------------------------------------------------------- motherhood
 
     public static final ForgeConfigSpec.BooleanValue ALLOW_ADOPTION = BUILDER

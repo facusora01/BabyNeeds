@@ -25,16 +25,6 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = BabyNeeds.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientRenderEvents {
 
-    /** Flat on the flank. */
-    private static final float SIDE_ANGLE = 90.0f;
-    /**
-     * How high the pivot rises as the body goes over. A quadruped on its side is about half its
-     * standing width off the ground, and lifting more than that leaves it visibly floating.
-     */
-    private static final float SIDE_LIFT = 0.24f;
-    /** How far a wallowing animal rocks either side of flat, and how fast. */
-    private static final float WALLOW_ROCK_ANGLE = 55.0f;
-    private static final float WALLOW_ROCK_SPEED = 1.9f;
     /** Nose to the ground. Vanilla clamps a mob's own look to 40 degrees, which is not enough. */
     private static final float HEAD_DOWN_ANGLE = 62.0f;
 
@@ -109,12 +99,17 @@ public class ClientRenderEvents {
             // Going down is not the same shape as being down: the body drops as it rolls, and the
             // lift only reaches its full height once it is actually on its flank. Rolling about a
             // fixed high pivot is what left a lying sow hanging in the air.
-            pose.translate(0.0, SIDE_LIFT * side * side, 0.0);
+            float lift = Config.LIE_LIFT.get().floatValue() * side * side;
+            if (entry.pose() == PigPose.WALLOWING) {
+                lift -= Config.WALLOW_SINK.get().floatValue() * side;
+            }
+            pose.translate(0.0, lift, 0.0);
 
-            float roll = SIDE_ANGLE * side;
+            float roll = Config.LIE_ANGLE.get().floatValue() * side;
             if (entry.pose() == PigPose.WALLOWING) {
                 // Rocking from flank to flank - the actual motion that works mud into a pig's hide.
-                roll += Mth.sin(entry.poseSeconds() * WALLOW_ROCK_SPEED) * WALLOW_ROCK_ANGLE * side;
+                roll += Mth.sin(entry.poseSeconds() * Config.WALLOW_ROCK_SPEED.get().floatValue())
+                        * Config.WALLOW_ROCK_ANGLE.get().floatValue() * side;
             }
             pose.mulPose(new Quaternionf().rotateAxis(
                     (float) Math.toRadians(roll), forwardX, 0.0f, forwardZ));
