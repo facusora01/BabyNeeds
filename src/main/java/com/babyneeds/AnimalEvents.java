@@ -406,9 +406,24 @@ public class AnimalEvents {
             return;
         }
 
-        if (pose.isResting() && animal.getDeltaMovement().horizontalDistanceSqr() > 0.003) {
-            setPose(animal, PigPose.STANDING);
-        }
+    }
+
+    /**
+     * A settled animal does not walk, whatever settled it. The goals pin themselves while they run,
+     * but a pose can also be set by command or left standing by something else, and an animal that
+     * strolls around in a sitting pose looks exactly like a broken mod. The pose itself is therefore
+     * what decides, and it is enforced every tick rather than on the mod's once-a-second budget,
+     * because a shove from a passing pig lands in between.
+     */
+    @SubscribeEvent
+    static void onEveryTick(LivingEvent.LivingTickEvent event) {
+        if (Config.UNINSTALL_MODE.get()) return;
+        if (!(event.getEntity() instanceof Animal animal) || !AnimalState.isSupported(animal)) return;
+        if (animal.level().isClientSide() || !AnimalState.isInitialized(animal)) return;
+        if (!AnimalState.pose(animal).isResting()) return;
+
+        animal.getNavigation().stop();
+        animal.setDeltaMovement(0.0, Math.min(0.0, animal.getDeltaMovement().y), 0.0);
     }
 
     /**

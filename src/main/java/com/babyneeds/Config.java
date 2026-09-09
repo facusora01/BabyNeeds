@@ -415,49 +415,47 @@ public class Config {
 
     // ---------------------------------------------------------------- animation tuning
 
-    // A sitting pig is posed part by part, and the numbers that describe that pose are art, not
-    // logic: they cannot be derived, only looked at. Deriving the tilt on paper got its sign wrong
-    // twice, so they live here instead of being compiled in - edit the file, and the pose changes
-    // under you without a restart.
-    //
-    // Model space has +y pointing DOWN and +z pointing BACKWARDS, and the trunk already sits at 90
-    // degrees, which is what lays it flat along the animal.
+    // The sitting pose, in model units and radians. The defaults are derived from the pig's own
+    // geometry rather than picked by eye - see SittingPigModel for the working - but a pose is
+    // ultimately something you look at, so they are read live: edit the file with the game running
+    // and the pig changes shape under you.
 
-    public static final ForgeConfigSpec.DoubleValue SIT_BODY_TILT = BUILDER
-            .comment("Tilt added to the trunk when sitting, in radians. Negative drops the rump and",
-                    "lifts the chest, which is sitting; positive raises the rump, which is a pig",
-                    "doing a handstand.")
-            .defineInRange("animation.sitBodyTilt", -0.785, -1.5, 1.5);
+    public static final ForgeConfigSpec.DoubleValue SIT_TILT = BUILDER
+            .comment("Tilt of the trunk when sitting, in radians. Negative drops the rump and lifts",
+                    "the chest, which is what sitting is. The default of -0.38 is asin(6/16): the",
+                    "rump has six units to fall to reach the ground, over the sixteen between the",
+                    "chest and the tail.")
+            .defineInRange("animation.sitTilt", -0.38, -1.5, 1.5);
 
-    public static final ForgeConfigSpec.DoubleValue SIT_BODY_ANCHOR = BUILDER
-            .comment("How far forward, in model units, the point of the trunk that stays put while the",
-                    "rump goes down. A part rotates about its own pivot, which sits in the middle of",
-                    "the body, so tilting it alone seesaws the animal - the rear sinks and the chest",
-                    "lifts off the front legs. Anchoring the chest instead is what turns that seesaw",
-                    "into sitting down. About 10 puts the anchor at the shoulders.")
-            .defineInRange("animation.sitBodyAnchor", 10.0, 0.0, 24.0);
+    public static final ForgeConfigSpec.DoubleValue SIT_ANCHOR_FORWARD = BUILDER
+            .comment("How far forward of the body's pivot the point that holds still sits. A pig sits",
+                    "by pivoting about its chest, not its neck - and the body's own pivot is up at",
+                    "neck height, which is why rotating it alone drives the snout into the ground.",
+                    "10 puts this at the front of the trunk, above the front legs.")
+            .defineInRange("animation.sitAnchorForward", 10.0, 0.0, 24.0);
 
-    public static final ForgeConfigSpec.DoubleValue SIT_BODY_DROP = BUILDER
-            .comment("Extra sink on top of what anchoring the chest already works out, for taste.")
-            .defineInRange("animation.sitBodyDrop", -1.5, -8.0, 8.0);
-
-    public static final ForgeConfigSpec.DoubleValue SIT_BODY_SHIFT = BUILDER
-            .comment("How far the trunk slides backwards as it settles.")
-            .defineInRange("animation.sitBodyShift", 0.0, -8.0, 8.0);
+    public static final ForgeConfigSpec.DoubleValue SIT_ANCHOR_BELOW = BUILDER
+            .comment("How far below the pivot that same point sits. 7 puts it at the underside of the",
+                    "trunk, where the chest meets the top of the front legs - the part of a sitting",
+                    "animal that genuinely does not move.")
+            .defineInRange("animation.sitAnchorBelow", 7.0, 0.0, 24.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HEAD_DROP = BUILDER
             .comment("How far the head follows the chest. The head is a sibling of the body rather",
-                    "than a child, so it has to be moved on its own or it floats free of the neck.")
+                    "than a child, so it holds still on its own; with the chest anchored it should",
+                    "barely need to move at all.")
             .defineInRange("animation.sitHeadDrop", 0.0, -8.0, 8.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_FOLD = BUILDER
-            .comment("Rotation of the hind legs, in radians. Negative swings the feet forwards under",
-                    "the animal, which is what sitting looks like; positive kicks them out behind it.")
-            .defineInRange("animation.sitHindFold", -1.3, -2.0, 2.0);
+            .comment("Rotation of the hind legs, in radians. Negative swings the trotters forwards",
+                    "under the animal; -1.5 lays them almost flat along the ground, which is the",
+                    "shape a sitting pig makes.")
+            .defineInRange("animation.sitHindFold", -1.5, -2.0, 2.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_DROP = BUILDER
-            .comment("How far the hind leg pivots move down. Folding a leg forwards shortens how far",
-                    "it reaches below its pivot, so without a little of this the feet hang in the air.")
+            .comment("How far the hind leg pivots move down. A leg folded flat no longer reaches the",
+                    "six units below its pivot that it does standing, so without this the trotters",
+                    "hang in the air; 4 puts a horizontal leg on the floor.")
             .defineInRange("animation.sitHindDrop", 4.0, -8.0, 8.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_SHIFT = BUILDER
