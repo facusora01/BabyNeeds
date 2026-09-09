@@ -38,7 +38,10 @@ public class ModCommands {
         for (PigPose value : PigPose.values()) {
             poseCommand = poseCommand.then(Commands.literal(value.name().toLowerCase(java.util.Locale.ROOT))
                     .executes(ctx -> forEachNearby(ctx.getSource(), animal -> {
-                        AnimalState.setHeadDownTicks(animal, value == PigPose.HEAD_DOWN ? 200 : 0);
+                        // Long enough to walk around the animal and look at it from every side,
+                        // short enough that a pen full of test subjects is not left sitting forever.
+                        AnimalState.setHeadDownTicks(animal, value == PigPose.HEAD_DOWN ? 600 : 0);
+                        AnimalState.setPoseTicks(animal, value.isResting() ? 600 : 0);
                         AnimalEvents.setPose(animal, value);
                     }, "babyneeds.cmd.pose_set")));
         }

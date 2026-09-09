@@ -397,6 +397,15 @@ public class AnimalEvents {
     private static void tickPose(Animal animal) {
         PigPose pose = AnimalState.pose(animal);
 
+        if (pose.isResting()) {
+            int remaining = AnimalState.poseTicks(animal) - TICK_STEP;
+            AnimalState.setPoseTicks(animal, remaining);
+            if (remaining <= 0) {
+                setPose(animal, PigPose.STANDING);
+            }
+            return;
+        }
+
         if (pose == PigPose.HEAD_DOWN) {
             int remaining = AnimalState.headDownTicks(animal) - TICK_STEP;
             AnimalState.setHeadDownTicks(animal, remaining);
@@ -406,24 +415,6 @@ public class AnimalEvents {
             return;
         }
 
-    }
-
-    /**
-     * A settled animal does not walk, whatever settled it. The goals pin themselves while they run,
-     * but a pose can also be set by command or left standing by something else, and an animal that
-     * strolls around in a sitting pose looks exactly like a broken mod. The pose itself is therefore
-     * what decides, and it is enforced every tick rather than on the mod's once-a-second budget,
-     * because a shove from a passing pig lands in between.
-     */
-    @SubscribeEvent
-    static void onEveryTick(LivingEvent.LivingTickEvent event) {
-        if (Config.UNINSTALL_MODE.get()) return;
-        if (!(event.getEntity() instanceof Animal animal) || !AnimalState.isSupported(animal)) return;
-        if (animal.level().isClientSide() || !AnimalState.isInitialized(animal)) return;
-        if (!AnimalState.pose(animal).isResting()) return;
-
-        animal.getNavigation().stop();
-        animal.setDeltaMovement(0.0, Math.min(0.0, animal.getDeltaMovement().y), 0.0);
     }
 
     /**
@@ -491,6 +482,9 @@ public class AnimalEvents {
             }
         }
         vanillaEating.forEach(animal.goalSelector::removeGoal);
+
+        // Above everything: a settled animal does not walk, whatever settled it.
+        animal.goalSelector.addGoal(0, new HoldPoseGoal(animal));
 
         if (Config.MOTHERS_DEFEND_BABIES.get()) {
             // No target goal to go with it: she only ever has a target because something hurt her

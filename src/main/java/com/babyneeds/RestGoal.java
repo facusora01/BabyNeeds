@@ -21,6 +21,9 @@ import net.minecraft.world.level.block.Blocks;
  */
 public class RestGoal extends Goal {
 
+    /** Comfortably longer than the gap between two ticks of this goal, and no longer. */
+    private static final int POSE_REFRESH_TICKS = 40;
+
     private final Animal animal;
     private Vec3 restingSpot;
     private PigPose chosenPose;
@@ -83,6 +86,9 @@ public class RestGoal extends Goal {
     @Override
     public void tick() {
         restingTicks++;
+        // Refreshed while this goal is what is holding the animal down; when it stops, the pose
+        // expires on its own and the animal gets up.
+        AnimalState.setPoseTicks(animal, POSE_REFRESH_TICKS);
         AnimalEvents.holdStill(animal, restingSpot);
 
         if (chosenPose == PigPose.WALLOWING) {

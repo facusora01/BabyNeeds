@@ -37,6 +37,7 @@ public final class AnimalState {
     private static final String ADOPTION_COOLDOWN = "AdoptCd";
     private static final String REJECTED_BY = "RejectedBy";
     private static final String HEAD_DOWN_TICKS = "HeadDown";
+    private static final String POSE_TICKS = "PoseTicks";
     private static final String DEFEND_TICKS = "Defend";
     private static final String MUDDINESS = "Muddiness";
     private static final String MUD_SYNCED = "MudSynced";
@@ -256,6 +257,20 @@ public final class AnimalState {
 
     public static void setHeadDownTicks(Entity entity, int ticks) {
         data(entity).putInt(HEAD_DOWN_TICKS, Math.max(0, ticks));
+    }
+
+    /**
+     * Ticks a settled pose has left to live. Whatever is holding the animal down refreshes it while
+     * it holds; when nothing does, the animal gets up. Without it an animal put into a pose by
+     * something that then went away - an operator command, a goal that ended oddly - stays sat down
+     * for the rest of the world's life.
+     */
+    public static int poseTicks(Entity entity) {
+        return data(entity).getInt(POSE_TICKS);
+    }
+
+    public static void setPoseTicks(Entity entity, int ticks) {
+        data(entity).putInt(POSE_TICKS, Math.max(0, ticks));
     }
 
     /** Ticks a mother stays angry at whoever hurt her baby. */

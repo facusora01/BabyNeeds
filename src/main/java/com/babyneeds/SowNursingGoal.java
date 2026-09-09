@@ -15,6 +15,8 @@ import net.minecraft.world.phys.Vec3;
 public class SowNursingGoal extends Goal {
 
     private static final double LITTER_RADIUS = 8.0;
+    /** Comfortably longer than the gap between two ticks of this goal, and no longer. */
+    private static final int POSE_REFRESH_TICKS = 40;
 
     private final Animal sow;
     private int lyingTicks;
@@ -61,6 +63,7 @@ public class SowNursingGoal extends Goal {
     @Override
     public void tick() {
         lyingTicks++;
+        AnimalState.setPoseTicks(sow, POSE_REFRESH_TICKS);
         AnimalEvents.holdStill(sow, restingSpot);
     }
 

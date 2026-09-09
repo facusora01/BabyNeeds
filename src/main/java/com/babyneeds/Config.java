@@ -460,7 +460,7 @@ public class Config {
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_SHIFT = BUILDER
             .comment("How far the hind legs slide forwards (negative) or backwards (positive).")
-            .defineInRange("animation.sitHindShift", 0.0, -8.0, 8.0);
+            .defineInRange("animation.sitHindShift", -2.0, -8.0, 8.0);
 
     // ---------------------------------------------------------------- misc
 
