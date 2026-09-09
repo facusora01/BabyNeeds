@@ -88,6 +88,19 @@ real yield even when they slaughter before hunger does.
 Fractions are settled by a roll rather than rounded, so a single hide at quarter condition is a 25%
 chance of a hide, not a guaranteed nothing. Turn the whole thing off with `loot.conditionAffectsDrops`.
 
+**Playing with other loot mods.** Condition is a property of the animal, not a bonus on the kill, so
+BabyNeeds settles what the carcass is *first* and everyone else works from that number. Concretely:
+
+- Mods that hook `LivingDropsEvent` (looting boosters, drop multipliers, extra-drop mods) run at the
+  usual NORMAL priority; BabyNeeds runs at HIGHEST, so it goes first and they multiply the real,
+  thin carcass. A x3 multiplier on a starved cow gives three quarter-carcasses, not a full one.
+  It also means the stacks BabyNeeds scales are only the animal's own vanilla loot - items other
+  mods add afterwards are theirs and are left untouched.
+- Mods that rewrite the **loot table** instead (global loot modifiers, datapacks) resolve during
+  loot generation, before any drop event exists, so they necessarily run before BabyNeeds. The
+  result is still the same for a plain multiplier - x3 then x0.25 is x0.25 then x3 - but if such a
+  mod replaces beef with something else entirely, BabyNeeds simply scales whatever it finds.
+
 ## Commands
 
 All require permission level 2, and act on animals within 8 blocks:

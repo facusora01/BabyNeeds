@@ -31,6 +31,7 @@ import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -329,8 +330,14 @@ public class AnimalEvents {
      * Body condition applied to the carcass. A starved animal always yields the worst possible
      * drop, and one butchered while underfed yields somewhere in between, so a neglected herd is
      * worth less meat and less leather even if the player kills it before hunger does.
+     *
+     * Runs at HIGHEST priority deliberately. Condition is a property of the animal itself, not a
+     * bonus on top of the kill, so it has to settle what the carcass actually is before anything
+     * else touches it: a looting or drop-multiplier mod at the usual NORMAL priority then multiplies
+     * the real, thin carcass rather than a fat one. It also means the list we scale holds only the
+     * animal's own vanilla loot - extra items other mods add later are theirs and are left alone.
      */
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     static void onLivingDrops(LivingDropsEvent event) {
         if (Config.UNINSTALL_MODE.get()) return;
         if (!Config.CONDITION_AFFECTS_DROPS.get()) return;
