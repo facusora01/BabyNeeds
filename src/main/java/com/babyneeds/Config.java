@@ -235,8 +235,9 @@ public class Config {
             .comment("Ticks for dirt, grass or coarse dirt under muddy water to soak through and",
                     "become mud. This is how a wallow beds itself in: every block it converts makes",
                     "the water above silt faster, so a puddle in a dirt hollow turns into a proper",
-                    "wallow on its own (6000 = five real minutes).")
-            .defineInRange("pig.soilToMudTicks", 6000, 20, 10000000);
+                    "wallow on its own. Two full in-game days by default: a wallow is something",
+                    "a farm grows into, not something that appears over a lunch break.")
+            .defineInRange("pig.soilToMudTicks", 48000, 20, 10000000);
 
     public static final ForgeConfigSpec.BooleanValue MUDDY_WATER = BUILDER
             .comment("Water dug into mud silts up and turns brown, and runs clear again if the mud",
@@ -325,6 +326,49 @@ public class Config {
                     "This multiplies with condition, so a half-grown animal that starved is the worst",
                     "of both. Babies and weanlings drop nothing at all (vanilla's own rule).")
             .defineInRange("loot.juvenileYield", 0.45, 0.0, 1.0);
+
+    // ---------------------------------------------------------------- motherhood
+
+    public static final ForgeConfigSpec.BooleanValue ALLOW_ADOPTION = BUILDER
+            .comment("An orphan that trails after a grown animal of its own kind may be taken on by",
+                    "it. A foster mother comes into milk for it despite never having given birth.")
+            .define("motherhood.allowAdoption", true);
+
+    public static final ForgeConfigSpec.DoubleValue ADOPTION_CHANCE = BUILDER
+            .comment("Chance that a given adult accepts a given orphan. The answer stands for a while",
+                    "either way, so an orphan cannot re-roll the same cow once a second.")
+            .defineInRange("motherhood.adoptionChance", 0.5, 0.0, 1.0);
+
+    public static final ForgeConfigSpec.IntValue ADOPTION_RETRY_TICKS = BUILDER
+            .comment("Ticks before a refused orphan tries its luck again (6000 = five real minutes).")
+            .defineInRange("motherhood.adoptionRetryTicks", 6000, 20, 1000000);
+
+    public static final ForgeConfigSpec.DoubleValue REJECTION_DAMAGE = BUILDER
+            .comment("Damage from the headbutt an adult gives an orphan it will not take on. Meant to",
+                    "teach rather than to kill.")
+            .defineInRange("motherhood.rejectionDamage", 1.0, 0.0, 20.0);
+
+    public static final ForgeConfigSpec.DoubleValue REJECTION_KNOCKBACK = BUILDER
+            .comment("How hard that headbutt sends the orphan away.")
+            .defineInRange("motherhood.rejectionKnockback", 0.6, 0.0, 5.0);
+
+    public static final ForgeConfigSpec.IntValue HEADBUTT_DIP_TICKS = BUILDER
+            .comment("Ticks the adult holds its head down for the butt. Short: the whole gesture is a",
+                    "dip and a snap back up.")
+            .defineInRange("motherhood.headbuttDipTicks", 8, 1, 200);
+
+    public static final ForgeConfigSpec.BooleanValue MOTHERS_DEFEND_BABIES = BUILDER
+            .comment("A mother goes after whoever hurts her baby. She is a farm animal, so this is a",
+                    "shove rather than a real threat, but she will not stand and watch.")
+            .define("motherhood.defendBabies", true);
+
+    public static final ForgeConfigSpec.DoubleValue DEFEND_RADIUS = BUILDER
+            .comment("How far a mother will carry a grudge before she gives up and goes back to grazing.")
+            .defineInRange("motherhood.defendRadius", 16.0, 1.0, 64.0);
+
+    public static final ForgeConfigSpec.IntValue DEFEND_TICKS = BUILDER
+            .comment("Ticks she stays angry after the last time her baby was hurt (200 = ten seconds).")
+            .defineInRange("motherhood.defendTicks", 200, 20, 100000);
 
     // ---------------------------------------------------------------- misc
 

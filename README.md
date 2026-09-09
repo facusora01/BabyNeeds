@@ -120,7 +120,8 @@ pool around it, so a wallow never clears from the inside out.
 
 It also **beds itself in**: dirt, grass or coarse dirt sitting under muddy water soaks through and
 becomes mud, and every block it converts makes the water above silt faster. Flood a dirt hollow and
-come back later to a proper wallow.
+come back two in-game days later to a proper wallow: a wallow is something a farm grows into, not
+something that appears over a lunch break.
 
 All three changes are timestamps rather than counters, so they keep running while nobody is watching
 - a hole flooded ten minutes ago has already gone brown by the time you walk back to it, without the
@@ -145,10 +146,30 @@ Pigs have body poses of their own, and they choose them - nothing here is a play
   over its own model that dries off over a few minutes and washes away much faster in clean water.
 - **Nursing.** A sow lies flat so her litter can reach her, because piglets cannot nurse from a
   standing pig. A piglet can nurse from a wallowing sow too - she is on her flank either way.
+- **Eating.** The head goes down, and only the head. Sheep get their real vanilla eating animation
+  back (replacing their eat goal had taken it off them); everything else has its own head pitch
+  driven down, which bends the neck through vanilla's rig without rotating the body.
 
 Every one of those is animated rather than switched. The server only ever sends the target pose; the
 client eases into it over about a second on a smoothstep curve, so a sow folds down under her own
 weight instead of teleporting onto her side. A whole lie-down costs exactly one packet.
+
+## Orphans, foster mothers and angry cows
+
+An orphan trails after any grown animal of its kind, which is vanilla behaviour and looks exactly
+like what it is: a calf looking for a mother. So it gets an answer. An adult that an orphan gets
+close to decides, once, whether to take it on:
+
+- **Accepted** (50% by default): it becomes her baby, and she comes into milk for it despite never
+  having given birth.
+- **Refused**: a headbutt. Head down, snapped back up, and the calf goes flying with a heart of
+  damage. The answer stands for a few minutes, and the orphan will not pester the same animal again
+  in that time, so it wanders off to try its luck elsewhere.
+
+And **a mother goes after whoever hurts her baby**. She is a farm animal, so this is a shove and a
+headbutt rather than a real threat - farm animals have no attack damage in vanilla, so the mod gives
+them some - and she gives it up when the attacker gets far enough away or her temper runs out. She
+never starts anything: she only ever has a target because something hurt her calf.
 
 ## Carcass yield
 
@@ -217,6 +238,8 @@ default implies in real minutes. The headline knobs:
 - `pig.sitChance` / `pig.wallowChance` - how often pigs sit down and roll in the mud
 - `pig.mudDriesPerMinute` - how long a mud coating lasts
 - `pig.siltingTicks` / `pig.soilToMudTicks` - how fast a wallow forms and beds itself in
+- `motherhood.adoptionChance` - the odds an adult takes an orphan on
+- `motherhood.defendBabies` / `motherhood.defendRadius` - whether mothers retaliate, and how far
 - `loot.juvenileYield` - how much less an adolescent carcass is worth than a grown one
 - `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal

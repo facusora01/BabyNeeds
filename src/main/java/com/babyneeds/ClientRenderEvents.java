@@ -5,6 +5,7 @@ import org.joml.Quaternionf;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Sheep;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -15,11 +16,11 @@ import net.minecraftforge.fml.common.Mod;
  * adult); scaling each of them down once more turns that into a four-step ramp, so a calf visibly
  * grows instead of popping from baby to adult.
  *
- * The poses are built the same way, out of transforms rather than model changes. There is no sitting
- * or lying pig in vanilla, so a pig sits by tipping back onto its haunches and lies by rolling onto
- * its flank - and every one of those is driven by an eased progress value, so the animal folds down
- * over about a second instead of snapping between states. Hitboxes stay vanilla throughout: this is
- * presentation only.
+ * The poses are built out of transforms rather than model changes, because vanilla has no sitting or
+ * lying pose for a farm animal. Two rules keep that from looking like a glitch: everything is eased
+ * over about a second rather than switched, and <em>eating never rotates the body</em> - lowering the
+ * head is done by driving the animal's own head pitch, which is the difference between an animal
+ * grazing and an animal falling over. Hitboxes stay vanilla throughout: this is presentation only.
  */
 @Mod.EventBusSubscriber(modid = BabyNeeds.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientRenderEvents {
@@ -28,15 +29,24 @@ public class ClientRenderEvents {
     private static final float SIT_ANGLE = 24.0f;
     /** Flat on the flank. */
     private static final float SIDE_ANGLE = 90.0f;
+    /**
+     * How high the pivot rises as the body goes over. A quadruped on its side is about half its
+     * standing width off the ground, and lifting more than that leaves it visibly floating.
+     */
+    private static final float SIDE_LIFT = 0.24f;
     /** How far a wallowing animal rocks either side of flat, and how fast. */
     private static final float WALLOW_ROCK_ANGLE = 55.0f;
     private static final float WALLOW_ROCK_SPEED = 1.9f;
+    /** Nose to the ground. Vanilla clamps a mob's own look to 40 degrees, which is not enough. */
+    private static final float HEAD_DOWN_ANGLE = 62.0f;
 
     @SubscribeEvent
     static void onRenderPre(RenderLivingEvent.Pre<?, ?> event) {
         LivingEntity entity = event.getEntity();
         ClientStageCache.Entry entry = ClientStageCache.get(entity.getId());
         if (entry == null) return;
+
+        applyHeadPitch(entity, entry);
 
         PoseStack pose = event.getPoseStack();
         pose.pushPose();
@@ -46,13 +56,34 @@ public class ClientRenderEvents {
             pose.scale(scale, scale, scale);
         }
 
-        applyPose(pose, entity, entry, event.getPartialTick());
+        applyBodyPose(pose, entity, entry, event.getPartialTick());
     }
 
     @SubscribeEvent
     static void onRenderPost(RenderLivingEvent.Post<?, ?> event) {
         if (ClientStageCache.peek(event.getEntity().getId()) == null) return;
         event.getPoseStack().popPose();
+    }
+
+    /**
+     * Lowers the head, and only the head. The renderer reads the entity's pitch a few lines after
+     * this event fires and hands it to the model as the head rotation, so writing it here bends the
+     * neck through vanilla's own rig - no model surgery, no body rotation, and it eases in and out
+     * because the value it is driven by does.
+     *
+     * Sheep are left alone: they have a real eating animation in vanilla, and the goal fires it.
+     */
+    private static void applyHeadPitch(LivingEntity entity, ClientStageCache.Entry entry) {
+        if (entity instanceof Sheep) return;
+
+        float headDown = entry.headDownProgress();
+        if (headDown <= 0.0f && entry.pose() != PigPose.HEAD_DOWN) return;
+
+        float pitch = HEAD_DOWN_ANGLE * headDown;
+        // Both the current and previous pitch, so the renderer's own interpolation has nothing to
+        // fight with: the easing is already in headDown.
+        entity.xRotO = pitch;
+        entity.setXRot(pitch);
     }
 
     /**
@@ -63,8 +94,8 @@ public class ClientRenderEvents {
      * every pig the same way in world space and any pig not facing due north or south ends up lying
      * diagonally.
      */
-    private static void applyPose(PoseStack pose, LivingEntity entity,
-                                  ClientStageCache.Entry entry, float partialTick) {
+    private static void applyBodyPose(PoseStack pose, LivingEntity entity,
+                                      ClientStageCache.Entry entry, float partialTick) {
         float side = entry.sideProgress();
         float sit = entry.sitProgress();
         if (side <= 0.0f && sit <= 0.0f) return;
@@ -85,9 +116,10 @@ public class ClientRenderEvents {
         }
 
         if (side > 0.0f) {
-            // Lift the pivot as it goes over, so rolling the body does not bury half of it in the
-            // ground on the way down.
-            pose.translate(0.0, 0.45 * side, 0.0);
+            // Going down is not the same shape as being down: the body drops as it rolls, and the
+            // lift only reaches its full height once it is actually on its flank. Rolling about a
+            // fixed high pivot is what left a lying sow hanging in the air.
+            pose.translate(0.0, SIDE_LIFT * side * side, 0.0);
 
             float roll = SIDE_ANGLE * side;
             if (entry.pose() == PigPose.WALLOWING) {

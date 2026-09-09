@@ -7,9 +7,11 @@ import java.util.List;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -42,6 +44,8 @@ public abstract class BlockConsumingGoal extends Goal {
     /** Give up on a target that is taking too long: something is in the way. */
     private static final int MAX_TRAVEL_TICKS = 120;
     private static final double REACH_SQ = 3.0;
+    /** Kept a little longer than a chew tick, so the head does not bob between mouthfuls. */
+    private static final int HEAD_DOWN_HOLD_TICKS = 20;
 
     protected final Animal animal;
     protected final Species species;
@@ -151,6 +155,14 @@ public abstract class BlockConsumingGoal extends Goal {
         }
 
         animal.getNavigation().stop();
+        if (chewTicks == 0) {
+            startEatingAnimation();
+        }
+        // Refreshed while the mouthful lasts; the timer puts the head back up on its own if the
+        // goal is cut short, so an animal can never get stuck nose-down.
+        AnimalState.setHeadDownTicks(animal, HEAD_DOWN_HOLD_TICKS);
+        AnimalEvents.setPose(animal, PigPose.HEAD_DOWN);
+
         if (++chewTicks < chewDuration()) return;
 
         BlockState state = animal.level().getBlockState(target);
@@ -158,6 +170,17 @@ public abstract class BlockConsumingGoal extends Goal {
             consume(target, state);
         }
         target = null;
+    }
+
+    /**
+     * Sheep have a real head-down eating animation in vanilla, driven by an entity event; replacing
+     * their eat goal took it away from them, so it is fired here by hand. Everything else gets the
+     * mod's own head-down pose, which lowers the neck without tipping the body over.
+     */
+    private void startEatingAnimation() {
+        if (animal instanceof Sheep && animal.level() instanceof ServerLevel server) {
+            server.broadcastEntityEvent(animal, (byte) 10);
+        }
     }
 
     private boolean withinReach() {

@@ -15,6 +15,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.EatBlockGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Cow;
@@ -183,6 +184,11 @@ public class AnimalEvents {
         tickStarvation(animal, nutrition);
         tickTrample(animal);
         tickMuddiness(animal);
+        tickPose(animal);
+        Motherhood.tickDefending(animal);
+        if (AnimalState.mother(animal) == null || AnimalState.findMother(animal) == null) {
+            Motherhood.tickOrphan(animal);
+        }
 
         // A pig is the only reason this fluid exists, so its own tick is where the wallow around it
         // is kept honest - no global block scanning anywhere in the mod.
@@ -378,6 +384,28 @@ public class AnimalEvents {
         }
     }
 
+    /**
+     * Keeps poses honest. The head goes back up when its timer runs out, and anything settled that
+     * is nevertheless moving is put back on its feet - a goal that ends badly used to leave an
+     * animal tipped on its side while it walked off to graze, which looked like the mod had broken.
+     */
+    private static void tickPose(Animal animal) {
+        PigPose pose = AnimalState.pose(animal);
+
+        if (pose == PigPose.HEAD_DOWN) {
+            int remaining = AnimalState.headDownTicks(animal) - TICK_STEP;
+            AnimalState.setHeadDownTicks(animal, remaining);
+            if (remaining <= 0) {
+                setPose(animal, PigPose.STANDING);
+            }
+            return;
+        }
+
+        if (pose.isResting() && animal.getDeltaMovement().horizontalDistanceSqr() > 0.003) {
+            setPose(animal, PigPose.STANDING);
+        }
+    }
+
     /** Changes an animal's pose and tells everyone watching, which is what starts the animation. */
     static void setPose(Animal animal, PigPose pose) {
         if (AnimalState.pose(animal) == pose) return;
@@ -427,6 +455,11 @@ public class AnimalEvents {
         }
         vanillaEating.forEach(animal.goalSelector::removeGoal);
 
+        if (Config.MOTHERS_DEFEND_BABIES.get()) {
+            // No target goal to go with it: she only ever has a target because something hurt her
+            // baby, so she is never the one who starts it.
+            animal.goalSelector.addGoal(1, new MeleeAttackGoal(animal, 1.3, true));
+        }
         animal.goalSelector.addGoal(2, new NurseGoal(animal));
 
         if (species == Species.PIG) {

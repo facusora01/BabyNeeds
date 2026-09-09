@@ -14,7 +14,13 @@ public enum PigPose {
     /** Flat on its side. A sow does this to nurse, because piglets cannot reach a standing sow. */
     LYING(2),
     /** On its side in the mud and rocking, which is what actually coats a pig in mud. */
-    WALLOWING(3);
+    WALLOWING(3),
+    /**
+     * Head lowered to the ground - grazing, rooting, or the dip before a headbutt. The body stays
+     * upright: only the neck moves, which is the difference between an animal eating and an animal
+     * falling over.
+     */
+    HEAD_DOWN(4);
 
     private final int index;
 
@@ -31,9 +37,9 @@ public enum PigPose {
         return this == LYING || this == WALLOWING;
     }
 
-    /** Anything that is not standing: the animal is settled and will not walk off. */
+    /** Poses that stop the animal walking off. Head down is not one: it is eating, not resting. */
     public boolean isResting() {
-        return this != STANDING;
+        return this == SITTING || isOnSide();
     }
 
     public static PigPose byIndex(int index) {

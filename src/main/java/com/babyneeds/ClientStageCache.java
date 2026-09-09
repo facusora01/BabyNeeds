@@ -23,6 +23,8 @@ public final class ClientStageCache {
     /** Seconds a full lie-down or sit-down takes. Slow enough to read as an animal deciding to. */
     private static final float LIE_DOWN_SECONDS = 1.1f;
     private static final float SIT_DOWN_SECONDS = 0.7f;
+    /** A neck moves far faster than a whole body: this is a dip, not a fold. */
+    private static final float HEAD_DOWN_SECONDS = 0.35f;
 
     public static class Entry {
         private GrowthStage stage;
@@ -33,6 +35,8 @@ public final class ClientStageCache {
         private float sideProgress;
         /** 0 upright, 1 sat back on the haunches. */
         private float sitProgress;
+        /** 0 head level, 1 nose to the ground. */
+        private float headDownProgress;
         /** Seconds spent in the current pose, which drives the rocking of a wallow. */
         private float poseSeconds;
         private long lastFrameNanos;
@@ -46,6 +50,7 @@ public final class ClientStageCache {
             // animals do not fold themselves up the moment a player walks round the corner.
             this.sideProgress = pose.isOnSide() ? 1.0f : 0.0f;
             this.sitProgress = pose == PigPose.SITTING ? 1.0f : 0.0f;
+            this.headDownProgress = pose == PigPose.HEAD_DOWN ? 1.0f : 0.0f;
         }
 
         void retarget(GrowthStage stage, PigPose pose, float muddiness) {
@@ -68,6 +73,8 @@ public final class ClientStageCache {
 
             sideProgress = approach(sideProgress, pose.isOnSide() ? 1.0f : 0.0f, delta / LIE_DOWN_SECONDS);
             sitProgress = approach(sitProgress, pose == PigPose.SITTING ? 1.0f : 0.0f, delta / SIT_DOWN_SECONDS);
+            headDownProgress = approach(headDownProgress, pose == PigPose.HEAD_DOWN ? 1.0f : 0.0f,
+                    delta / HEAD_DOWN_SECONDS);
         }
 
         private static float approach(float current, float target, float step) {
@@ -96,13 +103,21 @@ public final class ClientStageCache {
             return smooth(sitProgress);
         }
 
+        public float headDownProgress() {
+            return smooth(headDownProgress);
+        }
+
         public float poseSeconds() {
             return poseSeconds;
         }
 
-        /** Smoothstep: slow to start moving, slow to settle, which is how weight behaves. */
+        /**
+         * Smootherstep rather than smoothstep. The plain curve still leaves a visible corner at each
+         * end, which is what makes a sow folding down read as rigid: this one starts and finishes
+         * with zero acceleration as well as zero speed, so the movement has weight to it.
+         */
         private static float smooth(float t) {
-            return t * t * (3.0f - 2.0f * t);
+            return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
         }
     }
 

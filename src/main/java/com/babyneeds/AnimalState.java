@@ -34,6 +34,10 @@ public final class AnimalState {
     private static final String MOTHER = "Mother";
     private static final String DEPENDENTS = "Dependents";
     private static final String POSE = "Pose";
+    private static final String ADOPTION_COOLDOWN = "AdoptCd";
+    private static final String REJECTED_BY = "RejectedBy";
+    private static final String HEAD_DOWN_TICKS = "HeadDown";
+    private static final String DEFEND_TICKS = "Defend";
     private static final String MUDDINESS = "Muddiness";
     private static final String MUD_SYNCED = "MudSynced";
     private static final String LIE_COOLDOWN = "LieCooldown";
@@ -220,6 +224,47 @@ public final class AnimalState {
 
     public static void setSyncedMuddiness(Entity entity, int tenths) {
         data(entity).putInt(MUD_SYNCED, tenths);
+    }
+
+    /** Ticks left before an orphan may ask another adult to take it on. */
+    public static int adoptionCooldown(Entity entity) {
+        return data(entity).getInt(ADOPTION_COOLDOWN);
+    }
+
+    public static void setAdoptionCooldown(Entity entity, int ticks) {
+        data(entity).putInt(ADOPTION_COOLDOWN, Math.max(0, ticks));
+    }
+
+    /** The adult that most recently refused this baby, so it does not pester the same one. */
+    public static UUID rejectedBy(Entity entity) {
+        CompoundTag tag = data(entity);
+        return tag.hasUUID(REJECTED_BY) ? tag.getUUID(REJECTED_BY) : null;
+    }
+
+    public static void setRejectedBy(Entity entity, UUID adult) {
+        data(entity).putUUID(REJECTED_BY, adult);
+    }
+
+    public static void clearRejectedBy(Entity entity) {
+        data(entity).remove(REJECTED_BY);
+    }
+
+    /** Ticks the head stays lowered. One timer for grazing, rooting and the dip of a headbutt. */
+    public static int headDownTicks(Entity entity) {
+        return data(entity).getInt(HEAD_DOWN_TICKS);
+    }
+
+    public static void setHeadDownTicks(Entity entity, int ticks) {
+        data(entity).putInt(HEAD_DOWN_TICKS, Math.max(0, ticks));
+    }
+
+    /** Ticks a mother stays angry at whoever hurt her baby. */
+    public static int defendTicks(Entity entity) {
+        return data(entity).getInt(DEFEND_TICKS);
+    }
+
+    public static void setDefendTicks(Entity entity, int ticks) {
+        data(entity).putInt(DEFEND_TICKS, Math.max(0, ticks));
     }
 
     public static int lieCooldown(Entity entity) {

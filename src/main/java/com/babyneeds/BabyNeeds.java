@@ -3,6 +3,10 @@ package com.babyneeds;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraftforge.event.entity.EntityAttributeModificationEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -29,6 +33,19 @@ public class BabyNeeds {
         ModItems.register(modEventBus);
 
         modEventBus.addListener(this::onCommonSetup);
+        modEventBus.addListener(this::onAttributeModify);
+    }
+
+    /**
+     * Farm animals have no attack damage in vanilla, because they never attack. A mother defending
+     * her baby needs some, or her charge is a shove with no consequence at all.
+     */
+    private void onAttributeModify(EntityAttributeModificationEvent event) {
+        for (EntityType<? extends LivingEntity> type : event.getTypes()) {
+            if (!event.has(type, Attributes.ATTACK_DAMAGE)) {
+                event.add(type, Attributes.ATTACK_DAMAGE, 2.0);
+            }
+        }
     }
 
     private void onCommonSetup(FMLCommonSetupEvent event) {
