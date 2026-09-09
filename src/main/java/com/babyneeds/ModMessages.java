@@ -57,6 +57,7 @@ public class ModMessages {
     private static StageSyncPayload payloadFor(Entity animal) {
         return new StageSyncPayload(animal.getId(),
                 AnimalState.stage(animal).index(),
-                AnimalState.isLying(animal));
+                AnimalState.pose(animal).index(),
+                AnimalState.muddiness(animal));
     }
 }

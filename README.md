@@ -124,6 +124,22 @@ Two things are its own: it creeps rather than flows, and it **drags**. Wading th
 you about a third of your speed (`pig.muddyWaterDrag`), which is what makes it read as mud rather
 than as brown water. It comes with a bucket.
 
+## What pigs do with their time
+
+Pigs have body poses of their own, and they choose them - nothing here is a player command:
+
+- **Sitting.** A fed, unbothered pig sits back on its haunches for a while, roughly once a minute of
+  having nothing better to do.
+- **Wallowing.** A pig standing in mud lies over and rocks from flank to flank, which is what
+  actually works mud into a hide. It comes out **coated in mud**, drawn as a translucent brown wash
+  over its own model that dries off over a few minutes and washes away much faster in clean water.
+- **Nursing.** A sow lies flat so her litter can reach her, because piglets cannot nurse from a
+  standing pig. A piglet can nurse from a wallowing sow too - she is on her flank either way.
+
+Every one of those is animated rather than switched. The server only ever sends the target pose; the
+client eases into it over about a second on a smoothstep curve, so a sow folds down under her own
+weight instead of teleporting onto her side. A whole lie-down costs exactly one packet.
+
 ## Carcass yield
 
 What a carcass gives is **how big the animal was, times what condition it died in**.
@@ -188,6 +204,8 @@ default implies in real minutes. The headline knobs:
 - `pig.rootFoodValue` / `pig.maxRootsPerBlock` - how well a pig lives off bare ground
 - `pig.mudLitterChance` / `pig.mudRootMultiplier` - the mud wallow payoff
 - `pig.eatsCrops` / `pig.eatsScraps` - whether pigs raid gardens and eat dropped food
+- `pig.sitChance` / `pig.wallowChance` - how often pigs sit down and roll in the mud
+- `pig.mudDriesPerMinute` - how long a mud coating lasts
 - `loot.juvenileYield` - how much less an adolescent carcass is worth than a grown one
 - `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal
@@ -210,7 +228,9 @@ version can carry over unchanged.
 v0.1.0 - first playable version. Known limits:
 
 - The four sizes are a render-time scale; hitboxes stay vanilla (baby-sized or adult-sized).
-- The lying sow is drawn by tipping the pig model on its side; there is no vanilla lying pose.
+- Sitting, lying and wallowing are transforms on the vanilla model, not new models - there is no
+  vanilla pose for any of them. They are eased rather than snapped, but a pig sitting is a pig
+  tipped back, not a re-rigged one.
 - Vanilla grass spread speed is untouched. Rotation pressure comes from trampled ground compacting
   into coarse dirt instead, which needs no mixin. Slowing vanilla regrowth itself would.
 - Horses, llamas, rabbits and tamed animals still use vanilla growth.

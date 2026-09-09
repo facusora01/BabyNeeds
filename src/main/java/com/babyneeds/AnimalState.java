@@ -33,7 +33,9 @@ public final class AnimalState {
     private static final String LACTATION_TICKS = "LactationTicks";
     private static final String MOTHER = "Mother";
     private static final String DEPENDENTS = "Dependents";
-    private static final String LYING = "Lying";
+    private static final String POSE = "Pose";
+    private static final String MUDDINESS = "Muddiness";
+    private static final String MUD_SYNCED = "MudSynced";
     private static final String LIE_COOLDOWN = "LieCooldown";
     private static final String INITIALIZED = "Init";
 
@@ -193,12 +195,31 @@ public final class AnimalState {
         return animal;
     }
 
-    public static boolean isLying(Entity entity) {
-        return data(entity).getBoolean(LYING);
+    /** What the animal is doing with its body. The client eases into whatever this says. */
+    public static PigPose pose(Entity entity) {
+        return PigPose.byIndex(data(entity).getInt(POSE));
     }
 
-    public static void setLying(Entity entity, boolean lying) {
-        data(entity).putBoolean(LYING, lying);
+    public static void setPose(Entity entity, PigPose pose) {
+        data(entity).putInt(POSE, pose.index());
+    }
+
+    /** 0 clean, 1 caked. Earned by rolling in a wallow, lost by drying off and by washing. */
+    public static double muddiness(Entity entity) {
+        return data(entity).getDouble(MUDDINESS);
+    }
+
+    public static void setMuddiness(Entity entity, double muddiness) {
+        data(entity).putDouble(MUDDINESS, Math.max(0.0, Math.min(1.0, muddiness)));
+    }
+
+    /** Coarse copy of what the client was last told, so a coating syncs in steps, not every tick. */
+    public static int syncedMuddiness(Entity entity) {
+        return data(entity).getInt(MUD_SYNCED);
+    }
+
+    public static void setSyncedMuddiness(Entity entity, int tenths) {
+        data(entity).putInt(MUD_SYNCED, tenths);
     }
 
     public static int lieCooldown(Entity entity) {

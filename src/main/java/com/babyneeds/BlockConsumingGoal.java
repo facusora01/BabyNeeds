@@ -83,7 +83,7 @@ public abstract class BlockConsumingGoal extends Goal {
     public boolean canUse() {
         // A newborn lives on milk alone; everything past that feeds itself.
         if (!GrowthCalculator.acceptsSolids(AnimalState.stage(animal))) return false;
-        if (AnimalState.isLying(animal)) return false;
+        if (AnimalState.pose(animal).isResting()) return false;
         if (!wantsToEat()) return false;
         if (searchCooldown-- > 0) return false;
         searchCooldown = SEARCH_COOLDOWN_TICKS;
@@ -100,7 +100,7 @@ public abstract class BlockConsumingGoal extends Goal {
     @Override
     public boolean canContinueToUse() {
         if (target == null) return false;
-        if (AnimalState.isLying(animal)) return false;
+        if (AnimalState.pose(animal).isResting()) return false;
         // Dropped rather than starved over: if it has not arrived by now, it is not getting there.
         if (travelTicks > MAX_TRAVEL_TICKS) return false;
         return isTarget(animal.level().getBlockState(target));

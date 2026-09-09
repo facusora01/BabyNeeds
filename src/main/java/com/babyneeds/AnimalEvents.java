@@ -186,6 +186,7 @@ public class AnimalEvents {
         tickGrowth(animal, stage);
         tickStarvation(animal, nutrition);
         tickTrample(animal);
+        tickMuddiness(animal);
 
         // A pig is the only reason this fluid exists, so its own tick is where the wallow around it
         // is kept honest - no global block scanning anywhere in the mod.
@@ -381,6 +382,36 @@ public class AnimalEvents {
         }
     }
 
+    /** Changes an animal's pose and tells everyone watching, which is what starts the animation. */
+    static void setPose(Animal animal, PigPose pose) {
+        if (AnimalState.pose(animal) == pose) return;
+        AnimalState.setPose(animal, pose);
+        ModMessages.syncToTracking(animal);
+    }
+
+    /**
+     * Mud dries off and washes away. Synced in tenths rather than continuously, so a coating that
+     * fades over minutes costs a handful of packets instead of one per tick.
+     */
+    private static void tickMuddiness(Animal animal) {
+        double muddiness = AnimalState.muddiness(animal);
+        if (muddiness <= 0.0) return;
+
+        double perMinute = Config.MUD_DRIES_PER_MINUTE.get();
+        // Standing in clean water scrubs it off far faster than air does.
+        if (animal.isInWater() && !AnimalState.isInMud(animal)) {
+            perMinute *= 4.0;
+        }
+        muddiness = Math.max(0.0, muddiness - perMinute * TICK_STEP / 1200.0);
+        AnimalState.setMuddiness(animal, muddiness);
+
+        int tenths = (int) Math.round(muddiness * 10.0);
+        if (tenths != AnimalState.syncedMuddiness(animal)) {
+            AnimalState.setSyncedMuddiness(animal, tenths);
+            ModMessages.syncToTracking(animal);
+        }
+    }
+
     // ------------------------------------------------------------------ wallows
 
     /**
@@ -441,6 +472,9 @@ public class AnimalEvents {
             animal.goalSelector.addGoal(4, new ScavengeGoal(animal));
             animal.goalSelector.addGoal(5, new ForageGoal(animal, species));
             animal.goalSelector.addGoal(6, new RootGoal(animal, species));
+            // Lowest priority on purpose: an animal only sits or wallows when nothing it needs is
+            // outstanding, so this is what a contented pig does with its spare time.
+            animal.goalSelector.addGoal(7, new RestGoal(animal));
         } else {
             animal.goalSelector.addGoal(5, new GrazeGoal(animal, species));
         }

@@ -81,7 +81,8 @@ public class NurseGoal extends Goal {
 
         // A piglet cannot reach the teats of a standing sow; it waits by her side until she settles.
         Species motherSpecies = AnimalState.speciesOf(mother);
-        if (motherSpecies != null && motherSpecies.nursesLyingDown() && !AnimalState.isLying(mother)) {
+        if (motherSpecies != null && motherSpecies.nursesLyingDown()
+                && !AnimalState.pose(mother).isOnSide()) {
             latchTicks = 0;
             return;
         }

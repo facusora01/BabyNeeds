@@ -26,6 +26,7 @@ public class SowNursingGoal extends Goal {
     @Override
     public boolean canUse() {
         if (AnimalState.lieCooldown(sow) > 0) return false;
+        if (AnimalState.pose(sow).isResting()) return false;
         if (!AnimalState.isLactating(sow) || AnimalState.milk(sow) <= 0.0) return false;
         if (sow.isInWater() || !sow.onGround()) return false;
         return !hungryLitter().isEmpty();
@@ -34,6 +35,7 @@ public class SowNursingGoal extends Goal {
     @Override
     public boolean canContinueToUse() {
         if (lyingTicks >= Config.SOW_LIE_DOWN_TICKS.get()) return false;
+        if (AnimalState.pose(sow) != PigPose.LYING) return false;
         if (AnimalState.milk(sow) <= 0.0) return false;
         return !hungryLitter().isEmpty();
     }
@@ -42,15 +44,15 @@ public class SowNursingGoal extends Goal {
     public void start() {
         lyingTicks = 0;
         sow.getNavigation().stop();
-        AnimalState.setLying(sow, true);
-        ModMessages.syncToTracking(sow);
+        AnimalEvents.setPose(sow, PigPose.LYING);
     }
 
     @Override
     public void stop() {
-        AnimalState.setLying(sow, false);
+        if (AnimalState.pose(sow) == PigPose.LYING) {
+            AnimalEvents.setPose(sow, PigPose.STANDING);
+        }
         AnimalState.setLieCooldown(sow, Config.SOW_LIE_COOLDOWN_TICKS.get());
-        ModMessages.syncToTracking(sow);
     }
 
     @Override

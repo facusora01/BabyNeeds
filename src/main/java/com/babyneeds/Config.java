@@ -223,6 +223,34 @@ public class Config {
                     "from plain mud either way.")
             .define("pig.muddyWater", true);
 
+    public static final ForgeConfigSpec.IntValue SIT_CHANCE = BUILDER
+            .comment("One in this many chances per tick that a contented pig sits down on its own.",
+                    "900 is roughly once every 45 seconds of standing around with nothing to do.")
+            .defineInRange("pig.sitChance", 900, 1, 100000);
+
+    public static final ForgeConfigSpec.IntValue SIT_TICKS = BUILDER
+            .comment("Base ticks a pig stays sat down; the real duration is randomised around it.")
+            .defineInRange("pig.sitTicks", 200, 20, 100000);
+
+    public static final ForgeConfigSpec.IntValue WALLOW_CHANCE = BUILDER
+            .comment("One in this many chances per tick that a pig standing in mud lies over and",
+                    "starts rolling. Much likelier than sitting: that is what mud is for.")
+            .defineInRange("pig.wallowChance", 200, 1, 100000);
+
+    public static final ForgeConfigSpec.IntValue WALLOW_TICKS = BUILDER
+            .comment("Ticks a wallowing pig spends rocking in the mud before getting up.")
+            .defineInRange("pig.wallowTicks", 160, 20, 100000);
+
+    public static final ForgeConfigSpec.DoubleValue WALLOW_MUD_PER_TICK = BUILDER
+            .comment("Coating picked up per tick of rolling, where 1.0 is caked head to trotter.",
+                    "0.012 covers a pig in about four seconds of proper wallowing.")
+            .defineInRange("pig.wallowMudPerTick", 0.012, 0.0, 1.0);
+
+    public static final ForgeConfigSpec.DoubleValue MUD_DRIES_PER_MINUTE = BUILDER
+            .comment("How much of a mud coating dries off per real minute. Standing in clean water",
+                    "scrubs it off four times faster.")
+            .defineInRange("pig.mudDriesPerMinute", 0.3, 0.0, 10.0);
+
     public static final ForgeConfigSpec.DoubleValue MUDDY_WATER_DRAG = BUILDER
             .comment("How much muddy water slows whatever wades through it, as a fraction of normal",
                     "speed (0.65 = a third slower). Mud is thick and crossing a wallow should cost",
