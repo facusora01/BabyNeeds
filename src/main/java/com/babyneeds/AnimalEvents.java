@@ -1,6 +1,7 @@
 package com.babyneeds;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -20,6 +21,8 @@ import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.BabyEntitySpawnEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -87,6 +90,37 @@ public class AnimalEvents {
             AnimalState.refreshLactation(mother);
             AnimalState.setMilk(mother, Math.max(AnimalState.milk(mother), Config.SUCKLE_AMOUNT.get()));
             ModMessages.syncToTracking(mother);
+            spawnLitter(mother, event.getParentB());
+        }
+    }
+
+    /**
+     * A sow with a mud wallow sometimes farrows a whole litter instead of the single piglet vanilla
+     * makes. Bigger litters are rarer, and every extra piglet is bound to her and competes for the
+     * same udder - a big litter on a thin sow is a real problem, not free pork.
+     */
+    private static void spawnLitter(Animal mother, Mob otherParent) {
+        if (AnimalState.speciesOf(mother) != Species.PIG) return;
+        if (!(mother.level() instanceof ServerLevel server)) return;
+
+        double chance = AnimalState.isInMud(mother)
+                ? Config.MUD_LITTER_CHANCE.get()
+                : Config.DRY_LITTER_CHANCE.get();
+        int extra = LitterCalculator.extraBabies(
+                mother.getRandom().nextDouble(), chance,
+                mother.getRandom().nextDouble(),
+                Config.MAX_LITTER_SIZE.get(), Config.LITTER_RARITY_EXPONENT.get());
+        if (extra <= 0) return;
+
+        AgeableMob partner = otherParent instanceof AgeableMob ageable ? ageable : mother;
+        for (int i = 0; i < extra; i++) {
+            AgeableMob piglet = mother.getBreedOffspring(server, partner);
+            if (piglet == null) continue;
+            piglet.setBaby(true);
+            piglet.moveTo(mother.getX(), mother.getY(), mother.getZ(), mother.getYRot(), 0.0f);
+            AnimalState.initializeNewborn(piglet, mother);
+            AnimalState.applyStageToAge(piglet, GrowthStage.BABY);
+            server.addFreshEntity(piglet);
         }
     }
 
@@ -127,6 +161,44 @@ public class AnimalEvents {
 
         tickGrowth(animal, stage);
         tickStarvation(animal, nutrition);
+        tickTrample(animal);
+    }
+
+    /**
+     * One footfall on the ground the animal is standing on. Grass underfoot means the pasture
+     * recovered and the block is forgotten; bare dirt accumulates trampling, and once it has been
+     * bare well past the recovery window and worked hard enough, it can finally compact into coarse
+     * dirt. Both branches are a single block lookup per animal per second.
+     */
+    private static void tickTrample(Animal animal) {
+        if (!Config.PASTURE_DEGRADATION.get()) return;
+        if (!animal.onGround()) return;
+        if (!(animal.level() instanceof ServerLevel server)) return;
+
+        BlockPos pos = animal.blockPosition().below();
+        BlockState state = server.getBlockState(pos);
+        PastureData pasture = PastureData.get(server);
+
+        if (state.is(Blocks.GRASS_BLOCK)) {
+            pasture.forget(pos);
+            return;
+        }
+        if (!state.is(Blocks.DIRT)) return;
+
+        long gameTime = server.getGameTime();
+        int tramples = pasture.trample(pos, gameTime);
+        double chance = PastureCalculator.compactChance(
+                pasture.bareTicks(pos, gameTime),
+                Config.PASTURE_RECOVERY_GRACE_TICKS.get(),
+                tramples,
+                Config.PASTURE_TRAMPLE_THRESHOLD.get(),
+                PastureBlocks.grassRatioAround(server, pos, Config.PASTURE_SCAN_RADIUS.get()),
+                Config.PASTURE_COMPACT_MAX_CHANCE.get());
+
+        if (PastureCalculator.compact(chance, animal.getRandom().nextDouble())) {
+            server.setBlockAndUpdate(pos, Blocks.COARSE_DIRT.defaultBlockState());
+            pasture.forget(pos);
+        }
     }
 
     private static void tickCooldowns(Animal animal) {
@@ -135,12 +207,8 @@ public class AnimalEvents {
     }
 
     private static double tickHunger(Animal animal, Species species) {
-        boolean inMud = species == Species.PIG && AnimalState.isInMud(animal);
         double perTick = HungerCalculator.decayPerTick(
-                Config.HUNGER_DECAY_PER_MINUTE.get(),
-                species.hungerRate(),
-                inMud,
-                Config.MUD_HUNGER_REDUCTION.get());
+                Config.HUNGER_DECAY_PER_MINUTE.get(), species.hungerRate());
         return HungerCalculator.drain(AnimalState.nutrition(animal), perTick * TICK_STEP);
     }
 
@@ -159,11 +227,8 @@ public class AnimalEvents {
             return nutrition;
         }
 
-        double rate = species.milkRate();
-        if (species == Species.PIG && AnimalState.isInMud(animal)) {
-            rate *= 1.0 + Config.MUD_MILK_BONUS.get();
-        }
-        double perTick = LactationCalculator.productionPerTick(Config.MILK_PER_MINUTE.get(), rate);
+        double perTick = LactationCalculator.productionPerTick(
+                Config.MILK_PER_MINUTE.get(), species.milkRate());
         double before = AnimalState.milk(animal);
         double after = LactationCalculator.produce(before, perTick * TICK_STEP);
         if (after <= before) return nutrition;

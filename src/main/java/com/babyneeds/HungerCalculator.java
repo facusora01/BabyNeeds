@@ -14,17 +14,8 @@ public final class HungerCalculator {
     private HungerCalculator() {
     }
 
-    /**
-     * @param inMud pigs wallowing in mud thermoregulate instead of burning fat, so they get a
-     *              discount on hunger decay - the mud puddle is a real husbandry bonus.
-     */
-    public static double decayPerTick(double decayPerMinute, double speciesRate,
-                                      boolean inMud, double mudReduction) {
-        double perTick = Math.max(0.0, decayPerMinute) * Math.max(0.0, speciesRate) / TICKS_PER_MINUTE;
-        if (inMud) {
-            perTick *= Math.max(0.0, 1.0 - clamp01(mudReduction));
-        }
-        return perTick;
+    public static double decayPerTick(double decayPerMinute, double speciesRate) {
+        return Math.max(0.0, decayPerMinute) * Math.max(0.0, speciesRate) / TICKS_PER_MINUTE;
     }
 
     public static double drain(double nutrition, double amount) {
@@ -50,10 +41,5 @@ public final class HungerCalculator {
         if (starvingTicks < graceTicks) return false;
         int safeInterval = Math.max(1, intervalTicks);
         return (starvingTicks - graceTicks) % safeInterval == 0;
-    }
-
-    private static double clamp01(double value) {
-        if (value < 0.0) return 0.0;
-        return Math.min(value, 1.0);
     }
 }

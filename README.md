@@ -51,16 +51,26 @@ alone so normal breeding cooldowns still work.
 ## Pasture and rotation
 
 Animals graze for themselves. Loose grass and ferns are eaten whole and cost the soil nothing;
-eating the turf off a grass block leaves **bare dirt**, and doing that where the surrounding
-pasture is already stripped compacts it into **coarse dirt**, which vanilla grass never spreads
-back onto until a player hoes it.
+eating the turf off a grass block leaves **bare dirt** and starts that block's recovery clock.
 
-That is the whole rotation pressure. A generously sized or rotated pasture recovers on its own; a
-packed pen turns to coarse dirt, stops feeding the herd, the mothers dry up, and the babies go
-with them.
+Grazing never ruins soil on its own. Ground is only lost when it stays bare well past the recovery
+window (a full in-game day by default) **and** keeps being trampled by the herd standing on it.
+Only then can it compact into **coarse dirt**, which vanilla grass never spreads back onto until a
+player hoes it.
 
-**Pigs and mud**: a pig standing in mud is wallowing - it burns noticeably less nutrition, and a
-sow with mud access produces more milk. A pig pen with a mud puddle is genuinely better husbandry.
+That split is the whole design: a pasture the animals leave alone for a while always grows back, so
+rotating a herd - or simply giving it room to wander - costs you nothing. A pen the animals never
+leave gets worked past the grace period every day, turns to coarse dirt, stops feeding them, the
+mothers dry up, and the babies go with them.
+
+Each level keeps a small record of its bare ground (when the turf came off, how much it has been
+walked on), pruned automatically and dropped the moment grass grows back over a block.
+
+**Pigs and mud**: a sow with access to a mud wallow sometimes farrows a **litter of up to four**
+instead of a single piglet - about 8% of births, and the bigger the litter the rarer it is (roughly
+69% twins, 18% triplets, 13% quadruplets). Every extra piglet is bound to her and competes for the
+same udder, so a big litter on a thin sow is a real problem rather than free pork. Without mud
+anywhere near her, a sow throws one piglet like everything else.
 
 ## Commands
 
@@ -83,7 +93,9 @@ default implies in real minutes. The headline knobs:
 - `growth.growthSpeed` - global multiplier over the whole four-stage ramp
 - `hunger.decayPerMinute` - how fast animals get hungry
 - `milk.minNutrition` - how well fed a mother must be to make any milk
-- `pasture.coarseBaseChance` / `pasture.coarseMaxChance` - how punishing overgrazing is
+- `pasture.recoveryGraceTicks` - how long bare ground is safe before it can ever be lost
+- `pasture.trampleThreshold` / `pasture.compactMaxChance` - how much traffic ruins soil, and how fast
+- `pig.mudLitterChance` / `pig.maxLitterSize` - the mud wallow payoff
 - `misc.uninstallMode` - clean removal
 
 ## Building
@@ -105,6 +117,6 @@ v0.1.0 - first playable version. Known limits:
 
 - The four sizes are a render-time scale; hitboxes stay vanilla (baby-sized or adult-sized).
 - The lying sow is drawn by tipping the pig model on its side; there is no vanilla lying pose.
-- Vanilla grass spread speed is untouched. Rotation pressure comes from coarse dirt instead, which
-  needs no mixin. Slowing vanilla regrowth itself would.
+- Vanilla grass spread speed is untouched. Rotation pressure comes from trampled ground compacting
+  into coarse dirt instead, which needs no mixin. Slowing vanilla regrowth itself would.
 - Horses, llamas, rabbits and tamed animals still use vanilla growth.

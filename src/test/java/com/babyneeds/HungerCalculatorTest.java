@@ -7,26 +7,18 @@ import static org.junit.Assert.*;
 public class HungerCalculatorTest {
 
     private static final double DECAY_PER_MINUTE = 1.2;
-    private static final double MUD_REDUCTION = 0.35;
 
     @Test
     public void decayMatchesTheConfiguredRatePerMinute() {
-        double perTick = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, 1.0, false, MUD_REDUCTION);
+        double perTick = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, 1.0);
         assertEquals(DECAY_PER_MINUTE, perTick * 1200.0, 0.0001);
     }
 
     @Test
     public void hungrierSpeciesDrainFaster() {
-        double pig = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, Species.PIG.hungerRate(), false, MUD_REDUCTION);
-        double sheep = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, Species.SHEEP.hungerRate(), false, MUD_REDUCTION);
+        double pig = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, Species.PIG.hungerRate());
+        double sheep = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, Species.SHEEP.hungerRate());
         assertTrue(pig > sheep);
-    }
-
-    @Test
-    public void mudSavesAPigTheConfiguredShare() {
-        double dry = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, 1.0, false, MUD_REDUCTION);
-        double wallowing = HungerCalculator.decayPerTick(DECAY_PER_MINUTE, 1.0, true, MUD_REDUCTION);
-        assertEquals(dry * (1.0 - MUD_REDUCTION), wallowing, 0.0001);
     }
 
     @Test

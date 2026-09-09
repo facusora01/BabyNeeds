@@ -3,6 +3,7 @@ package com.babyneeds;
 import java.util.EnumSet;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Animal;
@@ -12,11 +13,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Looking for food, and wearing the pasture out while doing it. Loose grass and ferns are eaten
- * whole and cost the soil nothing; eating the turf off a grass block leaves bare dirt, and doing
- * that where the pasture is already stripped compacts it into coarse dirt, which vanilla grass
- * never spreads back onto. That is the pressure to rotate animals instead of parking a herd in one
- * pen forever.
+ * Looking for food, and wearing the pasture down while doing it. Loose grass and ferns are eaten
+ * whole and cost the soil nothing; eating the turf off a grass block leaves bare dirt and starts
+ * that block's recovery clock. Nothing is destroyed here - soil is only lost later, and only if the
+ * herd keeps standing on the same bare ground long after grass should have come back.
  */
 public class GrazeGoal extends Goal {
 
@@ -104,9 +104,15 @@ public class GrazeGoal extends Goal {
 
         double food;
         if (state.is(Blocks.GRASS_BLOCK)) {
-            double grassRatio = grassRatioAround(target);
+            // Eating the turf never ruins the soil on its own: it leaves plain dirt, which vanilla
+            // grass creeps back onto. Only ground that stays bare and keeps being trampled is lost,
+            // and PastureData is what remembers that.
+            double grassRatio = PastureBlocks.grassRatioAround(level, target, Config.PASTURE_SCAN_RADIUS.get());
             food = PastureCalculator.foodValue(grassRatio, species.grassFoodValue());
-            level.setBlock(target, degradedSoil(grassRatio), Block.UPDATE_ALL);
+            level.setBlock(target, Blocks.DIRT.defaultBlockState(), Block.UPDATE_ALL);
+            if (level instanceof ServerLevel server && Config.PASTURE_DEGRADATION.get()) {
+                PastureData.get(server).markBare(target, server.getGameTime());
+            }
         } else {
             // Loose grass and ferns grow back on their own; eating them costs the soil nothing.
             food = species.grassFoodValue();
@@ -120,37 +126,6 @@ public class GrazeGoal extends Goal {
         AnimalEvents.feedNutrition(animal, food);
         AnimalEvents.addGrowth(animal, food, AnimalState.stage(animal));
         AnimalEvents.eatEffects(animal, net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER);
-    }
-
-    private BlockState degradedSoil(double grassRatio) {
-        if (!Config.PASTURE_DEGRADATION.get()) return Blocks.DIRT.defaultBlockState();
-        double chance = PastureCalculator.coarseChance(grassRatio,
-                Config.COARSE_BASE_CHANCE.get(), Config.COARSE_MAX_CHANCE.get());
-        PastureCalculator.Outcome outcome =
-                PastureCalculator.graze(chance, animal.getRandom().nextDouble());
-        return outcome == PastureCalculator.Outcome.COARSE_DIRT
-                ? Blocks.COARSE_DIRT.defaultBlockState()
-                : Blocks.DIRT.defaultBlockState();
-    }
-
-    /** How much of the surrounding surface is still grass - the pasture's health at this spot. */
-    private double grassRatioAround(BlockPos center) {
-        int radius = Config.PASTURE_SCAN_RADIUS.get();
-        Level level = animal.level();
-        int grass = 0;
-        int total = 0;
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                BlockPos pos = center.offset(dx, 0, dz);
-                BlockState state = level.getBlockState(pos);
-                // Only soil counts; walls, water and paths are not pasture either way.
-                if (state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT) || state.is(Blocks.COARSE_DIRT)) {
-                    total++;
-                    if (state.is(Blocks.GRASS_BLOCK)) grass++;
-                }
-            }
-        }
-        return total == 0 ? 1.0 : (double) grass / total;
     }
 
     private BlockPos findGrass() {
@@ -179,8 +154,6 @@ public class GrazeGoal extends Goal {
     }
 
     private boolean isEdible(BlockState state) {
-        if (state.is(Blocks.GRASS) || state.is(Blocks.TALL_GRASS) || state.is(Blocks.FERN)) return true;
-        // Turf is only worth eating where something can actually grow back on top of it.
-        return state.is(Blocks.GRASS_BLOCK);
+        return PastureBlocks.isEdible(state);
     }
 }

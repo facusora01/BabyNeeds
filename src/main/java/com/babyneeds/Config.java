@@ -133,14 +133,23 @@ public class Config {
                     "of one permanent pen.")
             .define("pasture.degradation", true);
 
-    public static final ForgeConfigSpec.DoubleValue COARSE_BASE_CHANCE = BUILDER
-            .comment("Chance a grazed block degrades to coarse dirt in a lush pasture.")
-            .defineInRange("pasture.coarseBaseChance", 0.10, 0.0, 1.0);
+    public static final ForgeConfigSpec.IntValue PASTURE_RECOVERY_GRACE_TICKS = BUILDER
+            .comment("Ticks bare ground is safe after being grazed, no matter how much it is walked",
+                    "on. This is the window for grass to creep back if the herd moves on, so a",
+                    "rotated pasture never loses soil at all (24000 = one full in-game day).")
+            .defineInRange("pasture.recoveryGraceTicks", 24000, 0, 10000000);
 
-    public static final ForgeConfigSpec.DoubleValue COARSE_MAX_CHANCE = BUILDER
-            .comment("Chance a grazed block degrades to coarse dirt when everything around it has",
-                    "already been eaten down. Overstocked pens hit this number constantly.")
-            .defineInRange("pasture.coarseMaxChance", 0.60, 0.0, 1.0);
+    public static final ForgeConfigSpec.IntValue PASTURE_TRAMPLE_THRESHOLD = BUILDER
+            .comment("Times an animal must be recorded standing on the same bare block (once per",
+                    "second per animal) before that soil can be lost. 60 = a full minute of an animal",
+                    "parked on the same spot, or four animals crossing it repeatedly.")
+            .defineInRange("pasture.trampleThreshold", 60, 1, 100000);
+
+    public static final ForgeConfigSpec.DoubleValue PASTURE_COMPACT_MAX_CHANCE = BUILDER
+            .comment("Chance per recorded trample that badly overworked bare ground turns to coarse",
+                    "dirt, once the grace period is over. Scaled down by any grass still left around",
+                    "the spot, so damage concentrates where the herd actually crowds.")
+            .defineInRange("pasture.compactMaxChance", 0.02, 0.0, 1.0);
 
     public static final ForgeConfigSpec.IntValue PASTURE_SCAN_RADIUS = BUILDER
             .comment("Radius in blocks used to judge how healthy the pasture around a grazed spot is.")
@@ -152,14 +161,25 @@ public class Config {
 
     // ---------------------------------------------------------------- pigs and mud
 
-    public static final ForgeConfigSpec.DoubleValue MUD_HUNGER_REDUCTION = BUILDER
-            .comment("Fraction of hunger decay a pig saves while standing in mud (0.35 = 35% slower).",
-                    "Wallowing is how a real pig regulates temperature instead of burning feed.")
-            .defineInRange("pig.mudHungerReduction", 0.35, 0.0, 1.0);
+    public static final ForgeConfigSpec.DoubleValue MUD_LITTER_CHANCE = BUILDER
+            .comment("Chance that a sow with access to a mud wallow farrows a litter instead of a",
+                    "single piglet. 0.08 = 8%. This is the payoff for building a pig pen with mud in",
+                    "it: not fatter pigs, but more of them.")
+            .defineInRange("pig.mudLitterChance", 0.08, 0.0, 1.0);
 
-    public static final ForgeConfigSpec.DoubleValue MUD_MILK_BONUS = BUILDER
-            .comment("Extra milk production for a sow with access to mud (0.25 = +25%).")
-            .defineInRange("pig.mudMilkBonus", 0.25, 0.0, 5.0);
+    public static final ForgeConfigSpec.DoubleValue DRY_LITTER_CHANCE = BUILDER
+            .comment("Same chance for a sow with no mud anywhere near her. Zero by default, so mud is",
+                    "what makes the difference.")
+            .defineInRange("pig.dryLitterChance", 0.0, 0.0, 1.0);
+
+    public static final ForgeConfigSpec.IntValue MAX_LITTER_SIZE = BUILDER
+            .comment("Largest possible litter, counting the piglet vanilla already made.")
+            .defineInRange("pig.maxLitterSize", 4, 1, 16);
+
+    public static final ForgeConfigSpec.DoubleValue LITTER_RARITY_EXPONENT = BUILDER
+            .comment("How much rarer each extra piglet is. Higher = big litters rarer. At 3.0 with a",
+                    "max of 4, a litter that happens is about 69% twins, 18% triplets, 13% quads.")
+            .defineInRange("pig.litterRarityExponent", 3.0, 1.0, 10.0);
 
     // ---------------------------------------------------------------- misc
 

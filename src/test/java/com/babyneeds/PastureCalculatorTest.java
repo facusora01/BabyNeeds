@@ -6,44 +6,72 @@ import static org.junit.Assert.*;
 
 public class PastureCalculatorTest {
 
-    private static final double BASE = 0.10;
-    private static final double MAX = 0.60;
+    private static final int GRACE = 24000;
+    private static final int TRAMPLE_THRESHOLD = 60;
+    private static final double MAX_CHANCE = 0.02;
 
     @Test
-    public void lushPastureOnlyDegradesAtTheBaseRate() {
-        assertEquals(BASE, PastureCalculator.coarseChance(1.0, BASE, MAX), 0.0001);
+    public void freshlyGrazedGroundIsNeverAtRisk() {
+        // The grace period is the promise that a rotated pasture keeps its soil.
+        assertFalse(PastureCalculator.canCompact(0, GRACE, 999, TRAMPLE_THRESHOLD));
+        assertFalse(PastureCalculator.canCompact(GRACE - 1, GRACE, 999, TRAMPLE_THRESHOLD));
     }
 
     @Test
-    public void strippedPastureDegradesAtTheMaximumRate() {
-        // An overstocked pen: everything around the spot is already eaten down.
-        assertEquals(MAX, PastureCalculator.coarseChance(0.0, BASE, MAX), 0.0001);
+    public void groundTheHerdLeftAloneIsNeverAtRisk() {
+        // Bare for days, but nothing walks on it: grass gets its chance to come back.
+        assertFalse(PastureCalculator.canCompact(GRACE * 10L, GRACE, 0, TRAMPLE_THRESHOLD));
+        assertFalse(PastureCalculator.canCompact(GRACE * 10L, GRACE, TRAMPLE_THRESHOLD - 1, TRAMPLE_THRESHOLD));
     }
 
     @Test
-    public void degradationRisesAsThePastureIsEatenDown() {
-        double lush = PastureCalculator.coarseChance(0.9, BASE, MAX);
-        double thin = PastureCalculator.coarseChance(0.3, BASE, MAX);
-        assertTrue(thin > lush);
+    public void onlyOldBareGroundUnderConstantTrafficCompacts() {
+        assertTrue(PastureCalculator.canCompact(GRACE, GRACE, TRAMPLE_THRESHOLD, TRAMPLE_THRESHOLD));
     }
 
     @Test
-    public void ratiosOutsideZeroToOneAreClamped() {
-        assertEquals(BASE, PastureCalculator.coarseChance(5.0, BASE, MAX), 0.0001);
-        assertEquals(MAX, PastureCalculator.coarseChance(-2.0, BASE, MAX), 0.0001);
+    public void chanceIsZeroWhileEitherConditionIsUnmet() {
+        assertEquals(0.0, PastureCalculator.compactChance(0, GRACE, 999, TRAMPLE_THRESHOLD, 0.0, MAX_CHANCE), 0.0);
+        assertEquals(0.0, PastureCalculator.compactChance(GRACE * 5L, GRACE, 1, TRAMPLE_THRESHOLD, 0.0, MAX_CHANCE), 0.0);
+    }
+
+    @Test
+    public void aPenWithGrassLeftAroundItSurvivesLonger() {
+        double stripped = PastureCalculator.compactChance(GRACE * 2L, GRACE, 180, TRAMPLE_THRESHOLD, 0.0, MAX_CHANCE);
+        double patchy = PastureCalculator.compactChance(GRACE * 2L, GRACE, 180, TRAMPLE_THRESHOLD, 0.5, MAX_CHANCE);
+        assertTrue(stripped > patchy);
+    }
+
+    @Test
+    public void grassAllAroundMeansNoSoilLossAtAll() {
+        assertEquals(0.0,
+                PastureCalculator.compactChance(GRACE * 2L, GRACE, 999, TRAMPLE_THRESHOLD, 1.0, MAX_CHANCE), 0.0);
+    }
+
+    @Test
+    public void theWorstCaseNeverExceedsTheConfiguredCeiling() {
+        double worst = PastureCalculator.compactChance(
+                GRACE * 100L, GRACE, 100000, TRAMPLE_THRESHOLD, 0.0, MAX_CHANCE);
+        assertEquals(MAX_CHANCE, worst, 0.0001);
+    }
+
+    @Test
+    public void harderTrampledGroundGoesFaster() {
+        double light = PastureCalculator.compactChance(GRACE * 2L, GRACE, 60, TRAMPLE_THRESHOLD, 0.0, MAX_CHANCE);
+        double heavy = PastureCalculator.compactChance(GRACE * 2L, GRACE, 150, TRAMPLE_THRESHOLD, 0.0, MAX_CHANCE);
+        assertTrue(heavy > light);
     }
 
     @Test
     public void theRollDecidesTheOutcome() {
-        assertEquals(PastureCalculator.Outcome.COARSE_DIRT, PastureCalculator.graze(0.5, 0.49));
-        assertEquals(PastureCalculator.Outcome.DIRT, PastureCalculator.graze(0.5, 0.51));
+        assertTrue(PastureCalculator.compact(0.02, 0.019));
+        assertFalse(PastureCalculator.compact(0.02, 0.021));
+        assertFalse(PastureCalculator.compact(0.0, 0.0));
     }
 
     @Test
     public void aStrippedPastureFeedsWorseThanALushOne() {
-        double lush = PastureCalculator.foodValue(1.0, 22.0);
-        double bare = PastureCalculator.foodValue(0.0, 22.0);
-        assertEquals(22.0, lush, 0.001);
-        assertEquals(11.0, bare, 0.001);
+        assertEquals(22.0, PastureCalculator.foodValue(1.0, 22.0), 0.001);
+        assertEquals(11.0, PastureCalculator.foodValue(0.0, 22.0), 0.001);
     }
 }
