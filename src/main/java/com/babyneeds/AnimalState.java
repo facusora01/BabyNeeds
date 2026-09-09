@@ -11,7 +11,6 @@ import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.animal.goat.Goat;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.core.BlockPos;
 
 /**
@@ -269,11 +268,10 @@ public final class AnimalState {
 
     // ------------------------------------------------------------------ environment
 
-    /** A pig standing in or on mud is wallowing: cheaper upkeep and richer milk. */
+    /** A pig standing in mud, or in the silty water of a proper wallow, is wallowing. */
     public static boolean isInMud(Animal animal) {
         BlockPos at = animal.blockPosition();
-        return animal.level().getBlockState(at).is(Blocks.MUD)
-                || animal.level().getBlockState(at.below()).is(Blocks.MUD)
-                || animal.level().getBlockState(at).is(Blocks.MUDDY_MANGROVE_ROOTS);
+        return MuddyWater.isWallow(animal.level().getBlockState(at))
+                || MuddyWater.isWallow(animal.level().getBlockState(at.below()));
     }
 }

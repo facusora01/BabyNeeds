@@ -1,19 +1,19 @@
 {
+  "block.babyneeds.muddy_water": "Agua embarrada",
+  "fluid.babyneeds.muddy_water": "Agua embarrada",
+  "item.babyneeds.muddy_water_bucket": "Cubo de agua embarrada",
   "babyneeds.stage.baby": "Bebé",
   "babyneeds.stage.weanling": "Destetado",
   "babyneeds.stage.juvenile": "Adolescente",
   "babyneeds.stage.adult": "Adulto",
-
   "babyneeds.status.line": "%s - %s | Nutrición %s | Leche %s",
   "babyneeds.status.lactating": "  En leche: sus crías pueden mamar.",
   "babyneeds.status.growth": "  Crecimiento a la siguiente etapa: %s%%",
-
   "babyneeds.msg.baby_only_milk": "Un recién nacido solo puede tomar leche.",
   "babyneeds.msg.too_young_to_milk": "Este animal es demasiado joven para ordeñar.",
   "babyneeds.msg.too_young_to_shear": "Este animal es demasiado joven para esquilar.",
   "babyneeds.msg.no_milk": "No está en leche: solo se puede ordeñar a una madre que haya parido.",
   "babyneeds.msg.udder_empty": "No hay leche de sobra: está amamantando a una cría.",
-
   "babyneeds.cmd.none_nearby": "No hay animales de BabyNeeds en 8 bloques.",
   "babyneeds.cmd.stage_set": "Etapa aplicada a %s animales.",
   "babyneeds.cmd.drained": "Se vaciaron %s animales a nutrición cero.",

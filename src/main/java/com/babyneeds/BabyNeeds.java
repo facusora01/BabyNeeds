@@ -24,6 +24,10 @@ public class BabyNeeds {
             LOGGER.error("Failed to register config", e);
         }
 
+        ModFluids.register(modEventBus);
+        ModBlocks.register(modEventBus);
+        ModItems.register(modEventBus);
+
         modEventBus.addListener(this::onCommonSetup);
     }
 

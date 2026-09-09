@@ -32,6 +32,8 @@ public class PastureData extends SavedData {
         long bareSince;
         int tramples;
         long lastTouched;
+        int roots;
+        long lastRooted;
 
         Plot(long bareSince, int tramples, long lastTouched) {
             this.bareSince = bareSince;
@@ -69,6 +71,26 @@ public class PastureData extends SavedData {
         return plot.tramples;
     }
 
+    /**
+     * A pig just worked this patch over. Returns how many times it had already been rooted since it
+     * last recovered, which is what decides whether there is anything left in it.
+     */
+    public int root(BlockPos pos, long gameTime, int recoveryTicks) {
+        Plot plot = plots.computeIfAbsent(pos.asLong(), key -> new Plot(gameTime, 0, gameTime));
+        if (gameTime - plot.lastRooted > recoveryTicks) {
+            // Left alone long enough for the ground to come back: the patch is fresh again.
+            plot.roots = 0;
+        }
+
+        int before = plot.roots;
+        plot.roots++;
+        plot.lastRooted = gameTime;
+        plot.lastTouched = gameTime;
+        prune(gameTime);
+        setDirty();
+        return before;
+    }
+
     /** Ticks this block has been bare, or 0 if it is not being tracked. */
     public long bareTicks(BlockPos pos, long gameTime) {
         Plot plot = plots.get(pos.asLong());
@@ -103,10 +125,13 @@ public class PastureData extends SavedData {
         ListTag list = tag.getList("Plots", Tag.TAG_COMPOUND);
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entry = list.getCompound(i);
-            data.plots.put(entry.getLong("Pos"), new Plot(
+            Plot plot = new Plot(
                     entry.getLong("Since"),
                     entry.getInt("Tramples"),
-                    entry.getLong("Touched")));
+                    entry.getLong("Touched"));
+            plot.roots = entry.getInt("Roots");
+            plot.lastRooted = entry.getLong("Rooted");
+            data.plots.put(entry.getLong("Pos"), plot);
         }
         return data;
     }
@@ -120,6 +145,8 @@ public class PastureData extends SavedData {
             entry.putLong("Since", plot.bareSince);
             entry.putInt("Tramples", plot.tramples);
             entry.putLong("Touched", plot.lastTouched);
+            entry.putInt("Roots", plot.roots);
+            entry.putLong("Rooted", plot.lastRooted);
             list.add(entry);
         });
         tag.put("Plots", list);

@@ -78,11 +78,35 @@ mothers dry up, and the babies go with them.
 Each level keeps a small record of its bare ground (when the turf came off, how much it has been
 walked on), pruned automatically and dropped the moment grass grows back over a block.
 
-**Pigs and mud**: a sow with access to a mud wallow sometimes farrows a **litter of up to four**
-instead of a single piglet - about 8% of births, and the bigger the litter the rarer it is (roughly
-69% twins, 18% triplets, 13% quadruplets). Every extra piglet is bound to her and competes for the
-same udder, so a big litter on a thin sow is a real problem rather than free pork. Without mud
-anywhere near her, a sow throws one piglet like everything else.
+## Pigs
+
+Pigs are the one species that does not live off pasture, because in a wallow pen no grass grows at
+all. They feed themselves three other ways, in the order they prefer:
+
+1. **Scraps on the ground.** Anything edible dropped near them, worth its own food value - a thrown
+   loaf of bread is several potatoes. This is how you feed a herd without hand-feeding each animal.
+2. **Ripe crops they can reach.** Only mature ones, and they still have to path to them, so a fenced
+   garden is safe. An open pen door is not.
+3. **Rooting.** Nose down, turning the soil over for roots and grubs. It works on dirt, coarse dirt,
+   podzol and mud, and it is a living rather than a feast: each patch pays less every time it is
+   worked over and is exhausted until it recovers. Rooted-over pasture comes up as bare dirt - a pig
+   ploughs the field it feeds on, so a pig pen should not be your good grass.
+
+The upshot is that a pig pen supports fewer animals than a pasture of the same size unless the
+farmer brings crops, which is exactly how pigs are actually kept.
+
+**The wallow.** Mud is not just decoration for them. It is **richer to root** than dry ground, and a
+sow with access to one sometimes farrows a **litter of up to four** instead of a single piglet -
+about 8% of births, and the bigger the litter the rarer it is (roughly 69% twins, 18% triplets, 13%
+quadruplets). Every extra piglet is bound to her and competes for the same udder, though her yield
+scales with the litter so none of them goes hungry for it. Without mud anywhere near her, a sow
+throws one piglet like everything else.
+
+Water dug into mud **silts up and turns brown** on its own, and runs clear again if the mud around it
+is taken away. Water colour in Minecraft comes from the biome and is resolved per position by the
+client, so a brown puddle beside clean blue water cannot be a block - it is its own fluid, tinted
+from vanilla's water textures and tagged as water so swimming, drowning, hydration and putting out
+fires all behave normally. It comes with a bucket.
 
 ## Carcass yield
 
@@ -145,7 +169,9 @@ default implies in real minutes. The headline knobs:
   litter fed
 - `pasture.recoveryGraceTicks` - how long bare ground is safe before it can ever be lost
 - `pasture.trampleThreshold` / `pasture.compactMaxChance` - how much traffic ruins soil, and how fast
-- `pig.mudLitterChance` / `pig.maxLitterSize` - the mud wallow payoff
+- `pig.rootFoodValue` / `pig.maxRootsPerBlock` - how well a pig lives off bare ground
+- `pig.mudLitterChance` / `pig.mudRootMultiplier` - the mud wallow payoff
+- `pig.eatsCrops` / `pig.eatsScraps` - whether pigs raid gardens and eat dropped food
 - `loot.juvenileYield` - how much less an adolescent carcass is worth than a grown one
 - `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal
@@ -172,3 +198,5 @@ v0.1.0 - first playable version. Known limits:
 - Vanilla grass spread speed is untouched. Rotation pressure comes from trampled ground compacting
   into coarse dirt instead, which needs no mixin. Slowing vanilla regrowth itself would.
 - Horses, llamas, rabbits and tamed animals still use vanilla growth.
+- Muddy water is tagged as water, so most things treat it as water; a mod that checks for
+  `Fluids.WATER` by identity rather than by tag will not recognise it.

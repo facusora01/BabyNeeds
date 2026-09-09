@@ -170,6 +170,59 @@ public class Config {
 
     // ---------------------------------------------------------------- pigs and mud
 
+    public static final ForgeConfigSpec.DoubleValue ROOT_FOOD_VALUE = BUILDER
+            .comment("Nutrition a pig gets from turning over a fresh patch of dry ground. Well below",
+                    "a mouthful of grass, because rooting is a living, not a feast: a pig pen keeps",
+                    "fewer animals than a pasture the same size unless the farmer brings crops.")
+            .defineInRange("pig.rootFoodValue", 9.0, 0.0, 100.0);
+
+    public static final ForgeConfigSpec.DoubleValue MUD_ROOT_MULTIPLIER = BUILDER
+            .comment("How much richer mud is to root than dry ground. 1.6 = a wallow feeds 60% better,",
+                    "which is the practical reason to build one, on top of the litters it brings.")
+            .defineInRange("pig.mudRootMultiplier", 1.6, 0.0, 10.0);
+
+    public static final ForgeConfigSpec.IntValue MAX_ROOTS_PER_BLOCK = BUILDER
+            .comment("How many times a patch can be worked over before it is exhausted. Each root",
+                    "yields less than the last, so the third is worth a third of the first.")
+            .defineInRange("pig.maxRootsPerBlock", 3, 1, 100);
+
+    public static final ForgeConfigSpec.IntValue ROOT_RECOVERY_TICKS = BUILDER
+            .comment("Ticks before an exhausted patch is worth rooting again (24000 = one in-game day).")
+            .defineInRange("pig.rootRecoveryTicks", 24000, 20, 10000000);
+
+    public static final ForgeConfigSpec.IntValue ROOT_TICKS = BUILDER
+            .comment("Ticks a pig spends nose-down before a mouthful counts.")
+            .defineInRange("pig.rootTicks", 50, 1, 6000);
+
+    public static final ForgeConfigSpec.BooleanValue PIGS_EAT_CROPS = BUILDER
+            .comment("Pigs eat ripe crops they can reach. Leave the pen door open at your own risk.",
+                    "Only mature crops are taken, and they still have to path to them.")
+            .define("pig.eatsCrops", true);
+
+    public static final ForgeConfigSpec.DoubleValue CROP_FOOD_VALUE = BUILDER
+            .comment("Nutrition from one ripe crop - the best food a pig can find on its own.")
+            .defineInRange("pig.cropFoodValue", 28.0, 0.0, 100.0);
+
+    public static final ForgeConfigSpec.BooleanValue PIGS_EAT_SCRAPS = BUILDER
+            .comment("Pigs go after food dropped on the ground. This is how a player feeds a herd",
+                    "without hand-feeding each animal: throw the harvest over the fence.")
+            .define("pig.eatsScraps", true);
+
+    public static final ForgeConfigSpec.DoubleValue SCRAP_NUTRITION_PER_POINT = BUILDER
+            .comment("Nutrition per hunger point of food eaten off the ground, so a loaf of bread is",
+                    "worth several potatoes and a rotten scrap is worth almost nothing.")
+            .defineInRange("pig.scrapNutritionPerPoint", 3.0, 0.0, 50.0);
+
+    public static final ForgeConfigSpec.DoubleValue SCAVENGE_RADIUS = BUILDER
+            .comment("How far a pig will go for food lying on the ground.")
+            .defineInRange("pig.scavengeRadius", 12.0, 1.0, 64.0);
+
+    public static final ForgeConfigSpec.BooleanValue MUDDY_WATER = BUILDER
+            .comment("Water dug into mud silts up and turns brown, and runs clear again if the mud",
+                    "around it is removed. Purely how a wallow looks - a pig gets the same benefit",
+                    "from plain mud either way.")
+            .define("pig.muddyWater", true);
+
     public static final ForgeConfigSpec.DoubleValue MUD_LITTER_CHANCE = BUILDER
             .comment("Chance that a sow with access to a mud wallow farrows a litter instead of a",
                     "single piglet. 0.08 = 8%. This is the payoff for building a pig pen with mud in",
