@@ -33,8 +33,10 @@ import net.minecraft.world.entity.animal.Pig;
  * asin(6/16) - about 22 degrees - and it is why the default tilt is what it is rather than a rounder
  * number.
  */
-public class SittingPigModel<T extends Pig> extends PigModel<T> {
+public class PosedPigModel<T extends Pig> extends PigModel<T> {
 
+    private final float restFrontZRot;
+    private final float restHindZRot;
     private final float restBodyXRot;
     private final float restBodyY;
     private final float restBodyZ;
@@ -45,10 +47,12 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
     private final float restHindY;
     private final float restHindZ;
 
-    public SittingPigModel(ModelPart root) {
+    public PosedPigModel(ModelPart root) {
         super(root);
         // setupAnim rewrites rotations every frame but never offsets, so the resting ones have to be
         // remembered here and put back by hand.
+        this.restFrontZRot = rightFrontLeg.zRot;
+        this.restHindZRot = rightHindLeg.zRot;
         this.restBodyXRot = body.xRot;
         this.restBodyY = body.y;
         this.restBodyZ = body.z;
@@ -66,9 +70,45 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
         restoreStandingPose();
 
-        float sit = sitProgress(entity);
-        if (sit <= 0.0f) return;
-        applySit(sit);
+        ClientStageCache.Entry entry = ClientStageCache.peek(entity.getId());
+        if (entry == null) return;
+
+        // Lying and sitting are different shapes, not two amounts of the same one, so whichever the
+        // animal is doing wins outright rather than the two being mixed.
+        float side = entry.sideProgress();
+        if (side > 0.0f) {
+            applyLying(side);
+            return;
+        }
+
+        float sit = entry.sitProgress();
+        if (sit > 0.0f) {
+            applySit(sit);
+        }
+    }
+
+    /**
+     * Down on its side, legs stretched out in front of it and splayed a little - the shape a pig
+     * makes in a wallow, and the one it keeps while it rocks from flank to flank.
+     *
+     * Only the legs are posed here. The roll itself is a rotation of the whole animal, applied by
+     * the renderer, because a body rolling over is genuinely one rigid thing turning; what the whole
+     * animal cannot do is stretch its own legs out, which is why this half lives in the model.
+     */
+    private void applyLying(float side) {
+        float fold = Config.LIE_LEG_FOLD.get().floatValue() * side;
+        float splay = Config.LIE_LEG_SPLAY.get().floatValue() * side;
+
+        rightFrontLeg.xRot = fold;
+        leftFrontLeg.xRot = fold;
+        rightHindLeg.xRot = fold;
+        leftHindLeg.xRot = fold;
+
+        // Mirrored, so they open away from each other rather than leaning together.
+        rightFrontLeg.zRot = restFrontZRot + splay;
+        leftFrontLeg.zRot = restFrontZRot - splay;
+        rightHindLeg.zRot = restHindZRot + splay;
+        leftHindLeg.zRot = restHindZRot - splay;
     }
 
     /**
@@ -82,7 +122,14 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
      * tilt left on it by the last pig drawn is inherited by every pig after it.
      */
     private void restoreStandingPose() {
+        // setupAnim rewrites xRot on the head and all four legs, and nothing else - not the
+        // body's rotation, not any zRot. Everything it leaves alone has to be put back here or one
+        // animal's pose leaks into every animal drawn after it.
         body.xRot = restBodyXRot;
+        rightFrontLeg.zRot = restFrontZRot;
+        leftFrontLeg.zRot = restFrontZRot;
+        rightHindLeg.zRot = restHindZRot;
+        leftHindLeg.zRot = restHindZRot;
         body.y = restBodyY;
         body.z = restBodyZ;
         head.y = restHeadY;
@@ -146,9 +193,4 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         leftFrontLeg.z = rightFrontLeg.z;
     }
 
-    /** 0 standing, 1 fully sat, eased - the same value the rest of the mod's animation runs on. */
-    private float sitProgress(T entity) {
-        ClientStageCache.Entry entry = ClientStageCache.peek(entity.getId());
-        return entry == null ? 0.0f : entry.sitProgress();
-    }
 }

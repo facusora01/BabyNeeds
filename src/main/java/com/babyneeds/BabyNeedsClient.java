@@ -25,7 +25,7 @@ public class BabyNeedsClient {
      */
     @SubscribeEvent
     static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(EntityType.PIG, SittingPigRenderer::new);
+        event.registerEntityRenderer(EntityType.PIG, PosedPigRenderer::new);
     }
 
     /** Bolts the mud coating onto the pig renderer rather than replacing it. */

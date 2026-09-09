@@ -10,10 +10,10 @@ import net.minecraft.client.renderer.entity.PigRenderer;
  * gets per-part posing: the model field is protected, which means a subclass can replace it without
  * an access transformer or a mixin.
  */
-public class SittingPigRenderer extends PigRenderer {
+public class PosedPigRenderer extends PigRenderer {
 
-    public SittingPigRenderer(EntityRendererProvider.Context context) {
+    public PosedPigRenderer(EntityRendererProvider.Context context) {
         super(context);
-        this.model = new SittingPigModel<>(context.bakeLayer(ModelLayers.PIG));
+        this.model = new PosedPigModel<>(context.bakeLayer(ModelLayers.PIG));
     }
 }
