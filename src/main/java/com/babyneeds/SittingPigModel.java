@@ -80,7 +80,10 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         float anchor = Config.SIT_BODY_ANCHOR.get().floatValue();
 
         body.xRot = FLAT + tilt;
-        body.y = restBodyY + anchor * Mth.sin(tilt)
+        // Minus, not plus. Rotating by tilt carries the anchor point to (-anchor*sin, -anchor*cos)
+        // relative to where it was, so undoing that means moving the trunk the other way - getting
+        // this backwards doubled the very error the anchor exists to cancel.
+        body.y = restBodyY - anchor * Mth.sin(tilt)
                 + Config.SIT_BODY_DROP.get().floatValue() * sit;
         body.z = restBodyZ - anchor * (1.0f - Mth.cos(tilt))
                 + Config.SIT_BODY_SHIFT.get().floatValue() * sit;
