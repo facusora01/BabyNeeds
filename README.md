@@ -111,10 +111,15 @@ boats, and the water tag so anything that asks "is this water?" says yes. A flui
 water but does not behave like it is a trap, not a feature - players will treat it as water, because
 it is water, just dirty.
 
-Silt only stays put in a puddle of its own: muddy water touching open clean water runs clear again,
-so a wallow dug into the edge of a pond dilutes instead of leaving half a pool brown against half a
-pool blue with a hard seam down the middle. The rule is the one you would guess - a wallow is a hole
-in the mud, sealed off from the lake.
+Whether a pool is a wallow is decided for the **whole connected body of water at once**, never block
+by block: it has to be small enough to be a puddle, and mud has to be the majority of what is holding
+it. A hole dug in mud qualifies; a bay at the edge of a lake with one muddy bank does not, and open
+water feeding into a pool washes the silt out of it.
+
+Judging single blocks does not work, and it is worth saying why: "muddy water reverts next to clean
+water" is a fine rule for keeping silt out of a lake, but applied one block at a time every block of
+a fresh puddle refuses to turn because its neighbours have not turned yet, and a hole dug entirely in
+mud stays stubbornly blue.
 
 Because it carries the water tag, **lava treats it exactly as water**: stone, cobblestone and
 obsidian form the same way. Submerged, it looks the part too - the fog goes brown and visibility

@@ -119,9 +119,10 @@ public class ModFluids {
                                                     float renderDistance, float partialTick,
                                                     float nearDistance, float farDistance,
                                                     FogShape shape) {
-                            // Silt is opaque: a few blocks of visibility rather than water's dozens.
-                            RenderSystem.setShaderFogStart(-2.0f);
-                            RenderSystem.setShaderFogEnd(4.0f);
+                            // Silt is opaque. Not "murky water" - you cannot see your own snout,
+                            // which is the point of a wallow being somewhere a pig hides.
+                            RenderSystem.setShaderFogStart(-1.0f);
+                            RenderSystem.setShaderFogEnd(1.6f);
                         }
                     });
                 }
