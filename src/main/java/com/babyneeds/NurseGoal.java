@@ -91,7 +91,14 @@ public class NurseGoal extends Goal {
     }
 
     private void suckle() {
-        double drawn = LactationCalculator.drawMilk(AnimalState.milk(mother), Config.SUCKLE_AMOUNT.get());
+        // Its fair share of what is in the udder, never the whole pool: with a litter of four, the
+        // first piglet to latch cannot drink the other three dry. The floor in ration() means a
+        // late sibling still gets enough to live on even when the sow is nearly empty.
+        double drawn = LactationCalculator.ration(
+                AnimalState.milk(mother),
+                AnimalState.dependents(mother),
+                Config.SUCKLE_AMOUNT.get(),
+                Config.MIN_RATION.get());
         latchTicks = 0;
         if (drawn <= 0.0) return;
 

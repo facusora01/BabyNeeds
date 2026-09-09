@@ -43,7 +43,8 @@ public class ModCommands {
                             AnimalState.setNutrition(animal, HungerCalculator.MAX_NUTRITION);
                             AnimalState.setStarvingTicks(animal, 0);
                             if (AnimalState.isLactating(animal)) {
-                                AnimalState.setMilk(animal, LactationCalculator.MAX_MILK);
+                                AnimalState.setMilk(animal,
+                                        LactationCalculator.capacity(AnimalState.dependents(animal)));
                             }
                         }, "babyneeds.cmd.fed")))
                         .then(Commands.literal("uninstall")

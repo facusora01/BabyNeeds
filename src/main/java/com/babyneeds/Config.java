@@ -61,7 +61,9 @@ public class Config {
     // ---------------------------------------------------------------- lactation
 
     public static final ForgeConfigSpec.DoubleValue MILK_PER_MINUTE = BUILDER
-            .comment("Milk units a mother produces per real minute while she is well fed.")
+            .comment("Milk units a mother produces per real minute, per baby nursing from her, while",
+                    "she is well fed. A sow with a litter of four yields four times this, and burns",
+                    "four times the nutrition making it, so a big litter needs real pasture behind it.")
             .defineInRange("milk.milkPerMinute", 7.0, 0.0, 100.0);
 
     public static final ForgeConfigSpec.DoubleValue LACTATION_MIN_NUTRITION = BUILDER
@@ -93,9 +95,15 @@ public class Config {
             .comment("Milk a player's bucket takes out of the udder. An empty udder gives no bucket.")
             .defineInRange("milk.playerBucketCost", 34.0, 0.0, 100.0);
 
+    public static final ForgeConfigSpec.DoubleValue MIN_RATION = BUILDER
+            .comment("Milk a baby is guaranteed per bout while the udder is not completely empty, even",
+                    "when its siblings drank first. Sized to cover survival, so a litter sharing one",
+                    "udder never loses a piglet to its brothers being faster.")
+            .defineInRange("milk.minRation", 4.0, 0.0, 100.0);
+
     public static final ForgeConfigSpec.DoubleValue MILK_RESERVE_FOR_CHILD = BUILDER
-            .comment("Milk kept out of the player's reach while the mother still has a nursing baby,",
-                    "so milking a fresh cow cannot starve her calf outright.")
+            .comment("Milk kept out of the player's reach per nursing baby, so milking a fresh cow",
+                    "cannot starve her calf - and a sow with a litter is protected four times over.")
             .defineInRange("milk.reserveForChild", 20.0, 0.0, 100.0);
 
     public static final ForgeConfigSpec.IntValue LACTATION_DURATION_TICKS = BUILDER
@@ -122,8 +130,9 @@ public class Config {
             .defineInRange("nursing.sowLieDownTicks", 400, 20, 100000);
 
     public static final ForgeConfigSpec.IntValue SOW_LIE_COOLDOWN_TICKS = BUILDER
-            .comment("Ticks before a sow lies down again after a bout.")
-            .defineInRange("nursing.sowLieCooldownTicks", 1200, 0, 100000);
+            .comment("Ticks before a sow lies down again after a bout. Kept in step with the babies'",
+                    "own nursing cooldown so a litter is never left waiting on the mother.")
+            .defineInRange("nursing.sowLieCooldownTicks", 600, 0, 100000);
 
     // ---------------------------------------------------------------- pasture
 

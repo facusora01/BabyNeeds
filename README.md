@@ -44,6 +44,11 @@ alone so normal breeding cooldowns still work.
   bouts, when the mother settles, and only if she has milk to give.
 - Milk is manufactured out of the mother's own nutrition. Below the lactation threshold she makes
   none at all, and a mother with no demand (no nursing baby, no one milking her) dries up.
+- **A whole litter feeds off one udder.** Yield and capacity scale with the number of babies
+  nursing from her, so a sow with four piglets makes four times what a cow with one calf does, and
+  no bout may take more than its even share of what is in there - with a guaranteed floor per bout
+  on top, so the last piglet to reach her is never the one that starves. The cost is hers: four
+  piglets means four times the nutrition burnt, so a big litter needs real pasture behind it.
 - Players share the udder: a bucket takes real milk out of it, and milk is held back while a baby
   still nurses, so you cannot milk a fresh cow dry and starve her calf.
 - Bottle feeding a milk bucket to an orphan is allowed by default (`milk.allowBottleFeeding`).
@@ -93,6 +98,8 @@ default implies in real minutes. The headline knobs:
 - `growth.growthSpeed` - global multiplier over the whole four-stage ramp
 - `hunger.decayPerMinute` - how fast animals get hungry
 - `milk.minNutrition` - how well fed a mother must be to make any milk
+- `milk.milkPerMinute` - yield per nursing baby; `milk.minRation` - the per-bout floor that keeps a
+  litter fed
 - `pasture.recoveryGraceTicks` - how long bare ground is safe before it can ever be lost
 - `pasture.trampleThreshold` / `pasture.compactMaxChance` - how much traffic ruins soil, and how fast
 - `pig.mudLitterChance` / `pig.maxLitterSize` - the mud wallow payoff

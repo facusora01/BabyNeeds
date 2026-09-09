@@ -45,6 +45,10 @@ public class AnimalEvents {
 
     /** The systems run once a second rather than every tick; a herd is cheap this way. */
     static final int TICK_STEP = 20;
+    /** Babies on a mother are recounted this often, not every tick - it costs an entity scan. */
+    private static final int DEPENDENT_RECOUNT_TICKS = 100;
+    /** Sanity ceiling so a pile of babies on one mother cannot scale her yield without bound. */
+    private static final int MAX_DEPENDENTS = 8;
 
     // ------------------------------------------------------------------ lifecycle
 
@@ -86,22 +90,27 @@ public class AnimalEvents {
         AnimalState.applyStageToAge(child, GrowthStage.BABY);
 
         if (mother != null) {
-            // Giving birth is what puts her in milk; she starts with a first feed ready.
+            int born = 1 + spawnLitter(mother, event.getParentB());
+            // Giving birth is what puts her in milk, and she comes in with a first feed ready for
+            // every baby she just had - a litter of four is not born into an empty udder.
             AnimalState.refreshLactation(mother);
-            AnimalState.setMilk(mother, Math.max(AnimalState.milk(mother), Config.SUCKLE_AMOUNT.get()));
+            AnimalState.setDependents(mother, Math.max(AnimalState.dependents(mother), born));
+            AnimalState.setMilk(mother,
+                    Math.max(AnimalState.milk(mother), Config.SUCKLE_AMOUNT.get() * born));
             ModMessages.syncToTracking(mother);
-            spawnLitter(mother, event.getParentB());
         }
     }
 
     /**
      * A sow with a mud wallow sometimes farrows a whole litter instead of the single piglet vanilla
      * makes. Bigger litters are rarer, and every extra piglet is bound to her and competes for the
-     * same udder - a big litter on a thin sow is a real problem, not free pork.
+     * same udder, though her yield scales with the litter so none of them goes hungry for it.
+     *
+     * @return how many extra piglets were actually spawned
      */
-    private static void spawnLitter(Animal mother, Mob otherParent) {
-        if (AnimalState.speciesOf(mother) != Species.PIG) return;
-        if (!(mother.level() instanceof ServerLevel server)) return;
+    private static int spawnLitter(Animal mother, Mob otherParent) {
+        if (AnimalState.speciesOf(mother) != Species.PIG) return 0;
+        if (!(mother.level() instanceof ServerLevel server)) return 0;
 
         double chance = AnimalState.isInMud(mother)
                 ? Config.MUD_LITTER_CHANCE.get()
@@ -110,9 +119,10 @@ public class AnimalEvents {
                 mother.getRandom().nextDouble(), chance,
                 mother.getRandom().nextDouble(),
                 Config.MAX_LITTER_SIZE.get(), Config.LITTER_RARITY_EXPONENT.get());
-        if (extra <= 0) return;
+        if (extra <= 0) return 0;
 
         AgeableMob partner = otherParent instanceof AgeableMob ageable ? ageable : mother;
+        int spawned = 0;
         for (int i = 0; i < extra; i++) {
             AgeableMob piglet = mother.getBreedOffspring(server, partner);
             if (piglet == null) continue;
@@ -121,7 +131,9 @@ public class AnimalEvents {
             AnimalState.initializeNewborn(piglet, mother);
             AnimalState.applyStageToAge(piglet, GrowthStage.BABY);
             server.addFreshEntity(piglet);
+            spawned++;
         }
+        return spawned;
     }
 
     private static Animal motherOf(Mob parentA, Mob parentB) {
@@ -216,6 +228,7 @@ public class AnimalEvents {
     private static double tickLactation(Animal animal, Species species, double nutrition) {
         if (!AnimalState.isLactating(animal)) return nutrition;
 
+        int dependents = countDependents(animal);
         int remaining = AnimalState.lactationTicks(animal) - TICK_STEP;
         AnimalState.setLactationTicks(animal, remaining);
         if (remaining <= 0) {
@@ -227,15 +240,42 @@ public class AnimalEvents {
             return nutrition;
         }
 
+        // Yield and capacity are per mouth, so a sow feeding four makes four times the milk of a
+        // cow feeding one. Without that, the litter would share a single calf's worth of udder and
+        // the slowest piglets would starve no matter how fairly it was split.
         double perTick = LactationCalculator.productionPerTick(
-                Config.MILK_PER_MINUTE.get(), species.milkRate());
+                Config.MILK_PER_MINUTE.get(), species.milkRate(), dependents);
         double before = AnimalState.milk(animal);
-        double after = LactationCalculator.produce(before, perTick * TICK_STEP);
+        double after = LactationCalculator.produce(before, perTick * TICK_STEP,
+                LactationCalculator.capacity(dependents));
         if (after <= before) return nutrition;
 
         AnimalState.setMilk(animal, after);
         double cost = LactationCalculator.nutritionCost(after - before, Config.MILK_NUTRITION_COST.get());
         return HungerCalculator.drain(nutrition, cost);
+    }
+
+    /**
+     * How many babies are nursing from this mother. Recounted every few seconds rather than every
+     * tick, and only for mothers actually in milk, so a herd costs almost nothing; between counts
+     * the stored number is used. Births and deaths therefore take a moment to register, which no
+     * one can feel.
+     */
+    private static int countDependents(Animal mother) {
+        if (mother.tickCount % DEPENDENT_RECOUNT_TICKS >= TICK_STEP) {
+            return AnimalState.dependents(mother);
+        }
+
+        double radius = Config.NURSE_SEARCH_RADIUS.get();
+        List<Animal> babies = mother.level().getEntitiesOfClass(Animal.class,
+                mother.getBoundingBox().inflate(radius),
+                other -> other != mother
+                        && mother.getUUID().equals(AnimalState.mother(other))
+                        && GrowthCalculator.acceptsMilk(AnimalState.stage(other)));
+
+        int count = Math.min(babies.size(), MAX_DEPENDENTS);
+        AnimalState.setDependents(mother, count);
+        return count;
     }
 
     private static void tickGrowth(Animal animal, GrowthStage stage) {
@@ -393,8 +433,9 @@ public class AnimalEvents {
 
         double milk = AnimalState.milk(animal);
         double cost = Config.PLAYER_BUCKET_MILK_COST.get();
-        boolean hasChild = AnimalState.isLactating(animal);
-        if (!LactationCalculator.canBeMilkedByPlayer(milk, cost, hasChild, Config.MILK_RESERVE_FOR_CHILD.get())) {
+        int dependents = AnimalState.isLactating(animal) ? AnimalState.dependents(animal) : 0;
+        if (!LactationCalculator.canBeMilkedByPlayer(milk, cost, dependents,
+                Config.MILK_RESERVE_FOR_CHILD.get())) {
             if (serverSide) message(player, "babyneeds.msg.udder_empty", ChatFormatting.YELLOW);
             return false;
         }

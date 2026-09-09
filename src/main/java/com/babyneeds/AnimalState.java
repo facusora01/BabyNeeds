@@ -33,6 +33,7 @@ public final class AnimalState {
     private static final String NURSE_COOLDOWN = "NurseCooldown";
     private static final String LACTATION_TICKS = "LactationTicks";
     private static final String MOTHER = "Mother";
+    private static final String DEPENDENTS = "Dependents";
     private static final String LYING = "Lying";
     private static final String LIE_COOLDOWN = "LieCooldown";
     private static final String INITIALIZED = "Init";
@@ -151,6 +152,15 @@ public final class AnimalState {
     /** Called on birth, on every nursing bout and on every bucket taken: demand keeps her in milk. */
     public static void refreshLactation(Entity entity) {
         setLactationTicks(entity, Config.LACTATION_DURATION_TICKS.get());
+    }
+
+    /** Babies currently nursing from this mother; drives both her yield and how milk is shared. */
+    public static int dependents(Entity entity) {
+        return data(entity).getInt(DEPENDENTS);
+    }
+
+    public static void setDependents(Entity entity, int count) {
+        data(entity).putInt(DEPENDENTS, Math.max(0, count));
     }
 
     public static int nurseCooldown(Entity entity) {
