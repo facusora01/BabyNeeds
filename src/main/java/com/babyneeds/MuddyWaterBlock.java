@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,6 +29,11 @@ public class MuddyWaterBlock extends LiquidBlock {
     @Override
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
         super.entityInside(state, level, pos, entity);
+
+        // A pig in its own wallow is the one thing that should not be slowed by it. Mud is where a
+        // pig belongs: it lives in it, feeds in it and rolls in it, and watching one struggle
+        // through its own puddle reads as the mod being broken rather than as mud being thick.
+        if (entity instanceof Pig) return;
 
         double drag = Config.MUDDY_WATER_DRAG.get();
         if (drag >= 1.0) return;

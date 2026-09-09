@@ -111,7 +111,7 @@ public class ModFluids {
                         public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level,
                                                        int renderDistance, float darkenWorldAmount,
                                                        Vector3f fluidFogColor) {
-                            return new Vector3f(0.26f, 0.20f, 0.11f);
+                            return new Vector3f(0.19f, 0.14f, 0.08f);
                         }
 
                         @Override
