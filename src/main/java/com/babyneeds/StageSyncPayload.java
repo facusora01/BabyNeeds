@@ -16,8 +16,11 @@ public class StageSyncPayload {
     private final int stageIndex;
     private final int poseIndex;
     private final int muddiness;
+    private final long poseStart;
 
-    public StageSyncPayload(int entityId, int stageIndex, int poseIndex, double muddiness) {
+    public StageSyncPayload(int entityId, int stageIndex, int poseIndex, double muddiness,
+                            long poseStart) {
+        this.poseStart = poseStart;
         this.entityId = entityId;
         this.stageIndex = stageIndex;
         this.poseIndex = poseIndex;
@@ -29,6 +32,7 @@ public class StageSyncPayload {
         this.stageIndex = buf.readVarInt();
         this.poseIndex = buf.readVarInt();
         this.muddiness = buf.readUnsignedByte();
+        this.poseStart = buf.readLong();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -36,6 +40,12 @@ public class StageSyncPayload {
         buf.writeVarInt(this.stageIndex);
         buf.writeVarInt(this.poseIndex);
         buf.writeByte(this.muddiness);
+        buf.writeLong(this.poseStart);
+    }
+
+    /** Game time the pose began, so the client can work the roll out for itself. */
+    public long poseStart() {
+        return poseStart;
     }
 
     public int entityId() {

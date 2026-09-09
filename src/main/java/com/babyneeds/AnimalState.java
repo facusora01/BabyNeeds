@@ -38,6 +38,7 @@ public final class AnimalState {
     private static final String REJECTED_BY = "RejectedBy";
     private static final String HEAD_DOWN_TICKS = "HeadDown";
     private static final String POSE_TICKS = "PoseTicks";
+    private static final String POSE_START = "PoseStart";
     private static final String DEFEND_TICKS = "Defend";
     private static final String MUDDINESS = "Muddiness";
     private static final String MUD_SYNCED = "MudSynced";
@@ -271,6 +272,19 @@ public final class AnimalState {
 
     public static void setPoseTicks(Entity entity, int ticks) {
         data(entity).putInt(POSE_TICKS, Math.max(0, ticks));
+    }
+
+    /**
+     * The game time a pose began. A roll is a function of how long it has been going, so both sides
+     * work it out from this rather than the server streaming an angle every tick: one number, sent
+     * once, and the client's animation and the server's movement stay in step by construction.
+     */
+    public static long poseStart(Entity entity) {
+        return data(entity).getLong(POSE_START);
+    }
+
+    public static void setPoseStart(Entity entity, long gameTime) {
+        data(entity).putLong(POSE_START, gameTime);
     }
 
     /** Ticks a mother stays angry at whoever hurt her baby. */

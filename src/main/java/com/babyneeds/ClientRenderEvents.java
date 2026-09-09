@@ -107,9 +107,13 @@ public class ClientRenderEvents {
 
             float roll = Config.LIE_ANGLE.get().floatValue() * side;
             if (entry.pose() == PigPose.WALLOWING) {
-                // Rocking from flank to flank - the actual motion that works mud into a pig's hide.
-                roll += Mth.sin(entry.poseSeconds() * Config.WALLOW_ROCK_SPEED.get().floatValue())
-                        * Config.WALLOW_ROCK_ANGLE.get().floatValue() * side;
+                // Worked out from the game time the roll began rather than from a local stopwatch,
+                // because the server is moving the animal sideways off the very same function. Any
+                // other clock and the pig would slide instead of roll.
+                double phase = WallowRoll.phase(entity.level().getGameTime(), partialTick,
+                        entry.poseStart(), Config.WALLOW_ROLL_SPEED.get());
+                roll += (float) Math.toDegrees(
+                        WallowRoll.angle(phase, Config.WALLOW_ROLL_ANGLE.get())) * side;
             }
             pose.mulPose(new Quaternionf().rotateAxis(
                     (float) Math.toRadians(roll), forwardX, 0.0f, forwardZ));

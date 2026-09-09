@@ -29,6 +29,7 @@ public final class ClientStageCache {
         private GrowthStage stage;
         private PigPose pose;
         private float muddiness;
+        private long poseStart;
 
         /** 0 upright, 1 flat on the flank. Eased towards whatever the pose calls for. */
         private float sideProgress;
@@ -40,10 +41,11 @@ public final class ClientStageCache {
         private float poseSeconds;
         private long lastFrameNanos;
 
-        Entry(GrowthStage stage, PigPose pose, float muddiness) {
+        Entry(GrowthStage stage, PigPose pose, float muddiness, long poseStart) {
             this.stage = stage;
             this.pose = pose;
             this.muddiness = muddiness;
+            this.poseStart = poseStart;
             this.lastFrameNanos = System.nanoTime();
             // Whatever pose the animal is in when it first comes into view is where it already is:
             // animals do not fold themselves up the moment a player walks round the corner.
@@ -52,9 +54,10 @@ public final class ClientStageCache {
             this.headDownProgress = pose == PigPose.HEAD_DOWN ? 1.0f : 0.0f;
         }
 
-        void retarget(GrowthStage stage, PigPose pose, float muddiness) {
+        void retarget(GrowthStage stage, PigPose pose, float muddiness, long poseStart) {
             this.stage = stage;
             this.muddiness = muddiness;
+            this.poseStart = poseStart;
             if (this.pose != pose) {
                 this.pose = pose;
                 this.poseSeconds = 0.0f;
@@ -111,6 +114,11 @@ public final class ClientStageCache {
             return poseSeconds;
         }
 
+        /** Game time the pose began - the shared clock the roll is measured from. */
+        public long poseStart() {
+            return poseStart;
+        }
+
         /**
          * Smootherstep rather than smoothstep. The plain curve still leaves a visible corner at each
          * end, which is what makes a sow folding down read as rigid: this one starts and finishes
@@ -129,10 +137,10 @@ public final class ClientStageCache {
     public static void accept(StageSyncPayload payload) {
         Entry entry = ENTRIES.get(payload.entityId());
         if (entry == null) {
-            ENTRIES.put(payload.entityId(),
-                    new Entry(payload.stage(), payload.pose(), payload.muddiness()));
+            ENTRIES.put(payload.entityId(), new Entry(payload.stage(), payload.pose(),
+                    payload.muddiness(), payload.poseStart()));
         } else {
-            entry.retarget(payload.stage(), payload.pose(), payload.muddiness());
+            entry.retarget(payload.stage(), payload.pose(), payload.muddiness(), payload.poseStart());
         }
     }
 

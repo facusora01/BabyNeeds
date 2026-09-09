@@ -58,6 +58,7 @@ public class ModMessages {
         return new StageSyncPayload(animal.getId(),
                 AnimalState.stage(animal).index(),
                 AnimalState.pose(animal).index(),
-                AnimalState.muddiness(animal));
+                AnimalState.muddiness(animal),
+                AnimalState.poseStart(animal));
     }
 }

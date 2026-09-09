@@ -438,6 +438,7 @@ public class AnimalEvents {
     static void setPose(Animal animal, PigPose pose) {
         if (AnimalState.pose(animal) == pose) return;
         AnimalState.setPose(animal, pose);
+        AnimalState.setPoseStart(animal, animal.level().getGameTime());
         ModMessages.syncToTracking(animal);
     }
 
