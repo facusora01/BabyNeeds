@@ -25,8 +25,6 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = BabyNeeds.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientRenderEvents {
 
-    /** How far back a sitting animal tips onto its haunches. */
-    private static final float SIT_ANGLE = 24.0f;
     /** Flat on the flank. */
     private static final float SIDE_ANGLE = 90.0f;
     /**
@@ -96,24 +94,16 @@ public class ClientRenderEvents {
      */
     private static void applyBodyPose(PoseStack pose, LivingEntity entity,
                                       ClientStageCache.Entry entry, float partialTick) {
+        // Sitting is not here: it is posed part by part inside SittingPigModel, because tipping a
+        // whole model back is what buried the hind legs and pointed the head at the sky. Only the
+        // poses that really are a whole-body roll - lying and wallowing - are transforms.
         float side = entry.sideProgress();
-        float sit = entry.sitProgress();
-        if (side <= 0.0f && sit <= 0.0f) return;
+        if (side <= 0.0f) return;
 
         float bodyYaw = Mth.rotLerp(partialTick, entity.yBodyRotO, entity.yBodyRot);
         double radians = Math.toRadians(bodyYaw);
         float forwardX = -(float) Math.sin(radians);
         float forwardZ = (float) Math.cos(radians);
-        // The animal's own left-right axis, perpendicular to the way it is facing.
-        float rightX = forwardZ;
-        float rightZ = -forwardX;
-
-        if (sit > 0.0f) {
-            // Sitting: the hindquarters go down and the chest comes up, pivoting about the rump.
-            pose.translate(0.0, -0.12 * sit, 0.0);
-            pose.mulPose(new Quaternionf().rotateAxis(
-                    (float) Math.toRadians(SIT_ANGLE * sit), rightX, 0.0f, rightZ));
-        }
 
         if (side > 0.0f) {
             // Going down is not the same shape as being down: the body drops as it rolls, and the

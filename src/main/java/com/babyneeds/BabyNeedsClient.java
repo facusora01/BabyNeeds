@@ -18,7 +18,17 @@ public class BabyNeedsClient {
         BabyNeeds.LOGGER.info("BabyNeeds client setup complete.");
     }
 
-    /** Bolts the mud coating onto vanilla's pig renderer rather than replacing the renderer. */
+    /**
+     * Swaps in the pig renderer whose model can sit. Registered rather than patched: the only thing
+     * that changes is the model, and a sitting pose has to be applied from inside setupAnim because
+     * the render event fires before vanilla writes the standing one.
+     */
+    @SubscribeEvent
+    static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(EntityType.PIG, SittingPigRenderer::new);
+    }
+
+    /** Bolts the mud coating onto the pig renderer rather than replacing it. */
     @SubscribeEvent
     static void onAddLayers(EntityRenderersEvent.AddLayers event) {
         LivingEntityRenderer<Pig, EntityModel<Pig>> renderer = event.getRenderer(EntityType.PIG);

@@ -140,7 +140,9 @@ than as brown water. It comes with a bucket.
 Pigs have body poses of their own, and they choose them - nothing here is a player command:
 
 - **Sitting.** A fed, unbothered pig sits back on its haunches for a while, roughly once a minute of
-  having nothing better to do.
+  having nothing better to do. Rump on the ground, hind legs folded forward under it, front legs
+  planted, head level - posed part by part rather than by tipping the whole animal backwards, which
+  is what used to bury its hind legs in the floor and point its snout at the sky.
 - **Wallowing.** A pig standing in mud lies over and rocks from flank to flank, which is what
   actually works mud into a hide. It comes out **coated in mud**, drawn as a translucent brown wash
   over its own model that dries off over a few minutes and washes away much faster in clean water.
@@ -283,9 +285,11 @@ version can carry over unchanged.
 v0.1.0 - first playable version. Known limits:
 
 - The four sizes are a render-time scale; hitboxes stay vanilla (baby-sized or adult-sized).
-- Sitting, lying and wallowing are transforms on the vanilla model, not new models - there is no
-  vanilla pose for any of them. They are eased rather than snapped, but a pig sitting is a pig
-  tipped back, not a re-rigged one.
+- Sitting is posed part by part, which needs the model itself: BabyNeeds registers its own pig
+  renderer (vanilla's, with the model swapped) because the render event fires before `setupAnim`
+  writes the standing pose over anything set from outside. A mod that also replaces the pig renderer
+  will conflict; a saddled pig keeps its saddle in the standing pose, since that is a separate model.
+- Lying and wallowing are still whole-body transforms, which is what they genuinely are.
 - Vanilla grass spread speed is untouched. Rotation pressure comes from trampled ground compacting
   into coarse dirt instead, which needs no mixin. Slowing vanilla regrowth itself would.
 - Horses, llamas, rabbits and tamed animals still use vanilla growth.
