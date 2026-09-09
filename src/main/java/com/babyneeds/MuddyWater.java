@@ -1,40 +1,31 @@
 package com.babyneeds;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Turns clean water into a wallow. Water dug into mud goes brown, and runs clear again if the mud
- * around it is taken away, so a player builds a pig wallow the obvious way - dig a hole in mud, pour
- * a bucket in - and it simply looks right.
+ * How a wallow forms, and how it spreads. Three slow changes, all of them driven by the same idea:
+ * mud and water in contact work on each other over time.
  *
- * The decision is made for a whole connected body of water at once, never block by block. Judging
- * single blocks bites its own tail: "muddy water reverts next to clean water" is a fine rule for
- * keeping silt out of a lake, but applied to one block at a time it means every block of a fresh
- * puddle refuses to turn because its neighbours have not turned yet, and a hole dug entirely in mud
- * stays stubbornly blue. Flood-filling the pool first and deciding once fixes that, and it is also
- * the only way to tell a puddle from the edge of an ocean.
+ * <ul>
+ *   <li><b>Water silts up.</b> A single block of mud touching the water is enough to start it going
+ *       brown. More mud touching it only makes it faster - water walled in on every side turns in a
+ *       fraction of the time, but still not instantly, because a wallow that appears the moment you
+ *       pour the bucket reads as a block swap rather than as something settling.</li>
+ *   <li><b>Silt settles out.</b> Muddy water cut off from every scrap of mud runs clear again, but
+ *       water in the middle of a wallow is held by the silt around it, so a pool does not clear from
+ *       the inside out.</li>
+ *   <li><b>Soil soaks through.</b> Dirt or grass under muddy water eventually becomes mud itself,
+ *       so a wallow slowly beds itself in - and every new mud block makes the water above silt
+ *       faster. A puddle in a dirt hollow becomes a proper wallow on its own.</li>
+ * </ul>
  */
 public final class MuddyWater {
-
-    /** A wallow is a puddle. Anything bigger than this is a pond and stays clean. */
-    private static final int MAX_WALLOW_BLOCKS = 32;
-    /** Hard stop on the flood fill so brushing an ocean cannot walk the whole thing. */
-    private static final int MAX_SEARCH_BLOCKS = MAX_WALLOW_BLOCKS + 24;
-    /** Minimum mud faces around the pool before it counts as dug into mud at all. */
-    private static final int MIN_MUD_FACES = 2;
 
     private MuddyWater() {
     }
@@ -53,98 +44,103 @@ public final class MuddyWater {
         return isMud(state) || isMuddyWater(state);
     }
 
+    /** Soil a wallow can work on. */
+    private static boolean isSoakableSoil(BlockState state) {
+        return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK)
+                || state.is(Blocks.COARSE_DIRT) || state.is(Blocks.ROOTED_DIRT);
+    }
+
     /**
-     * Re-evaluates every pool touching the given area and converts each one whichever way the mud
-     * around it now calls for. Cheap enough to run when a block is placed or broken, and every few
-     * seconds around a pig.
+     * Advances every slow change in a small area. Cheap enough to run whenever a block is placed or
+     * broken, every few seconds around a pig, and on a slow sweep around each player.
      */
     public static void updateArea(Level level, BlockPos center, int radius) {
         if (!Config.MUDDY_WATER.get()) return;
+        if (!(level instanceof ServerLevel server)) return;
 
-        Set<BlockPos> handled = new HashSet<>();
+        WallowData data = WallowData.get(server);
+        long gameTime = server.getGameTime();
+
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -radius, -radius),
                 center.offset(radius, radius, radius))) {
-            BlockPos immutable = pos.immutable();
-            if (handled.contains(immutable)) continue;
-            if (!isPoolSource(level.getBlockState(immutable))) continue;
+            BlockState state = server.getBlockState(pos);
 
-            List<BlockPos> body = collectBody(level, immutable);
-            handled.addAll(body);
-            applyToBody(level, body, shouldBeMuddy(level, body));
+            if (state.is(Blocks.WATER)) {
+                tickSilting(server, data, pos.immutable(), gameTime);
+            } else if (isMuddyWater(state)) {
+                tickClearing(server, data, pos.immutable(), gameTime);
+            } else if (isSoakableSoil(state)) {
+                tickSoaking(server, data, pos.immutable(), gameTime);
+            }
         }
-    }
-
-    /** Only still water forms a pool; a flowing edge is left to sort itself out. */
-    private static boolean isPoolSource(BlockState state) {
-        if (!state.is(Blocks.WATER) && !isMuddyWater(state)) return false;
-        return state.getFluidState().isSource();
     }
 
     /**
-     * The connected pool this block belongs to, clean and muddy alike. Bounded: past the cap this
-     * is open water rather than a puddle, and the caller treats the oversized result as such.
+     * Clean water going brown. One mud face is enough; each extra one divides the time, so a block
+     * boxed in by mud silts up four times faster than one with a single muddy bank.
      */
-    private static List<BlockPos> collectBody(Level level, BlockPos start) {
-        List<BlockPos> body = new ArrayList<>();
-        Set<BlockPos> seen = new HashSet<>();
-        Deque<BlockPos> queue = new ArrayDeque<>();
+    private static void tickSilting(ServerLevel level, WallowData data, BlockPos pos, long gameTime) {
+        if (!level.getFluidState(pos).isSource()) return;
 
-        queue.add(start);
-        seen.add(start);
-
-        while (!queue.isEmpty() && body.size() < MAX_SEARCH_BLOCKS) {
-            BlockPos pos = queue.poll();
-            body.add(pos);
-
-            for (Direction direction : Direction.values()) {
-                BlockPos next = pos.relative(direction).immutable();
-                if (!seen.add(next)) continue;
-                if (isPoolSource(level.getBlockState(next))) {
-                    queue.add(next);
-                }
-            }
+        int mudFaces = countFaces(level, pos, true);
+        if (mudFaces == 0) {
+            data.forget(pos);
+            return;
         }
-        return body;
+
+        long required = Math.max(1L, Config.SILTING_TICKS.get() / mudFaces);
+        if (data.elapsed(pos, WallowData.Change.SILTING, gameTime) < required) return;
+
+        level.setBlock(pos, ModBlocks.MUDDY_WATER_BLOCK.get().defaultBlockState(), Block.UPDATE_ALL);
+        data.forget(pos);
     }
 
     /**
-     * A pool is a wallow when it is small enough to be a puddle and mud is what is holding it. Mud
-     * has to be the majority of what contains it, so a hole dug in mud qualifies while a bay at the
-     * edge of a lake with one muddy bank does not.
+     * Silt settling out of water that has nothing muddy left against it. Muddy neighbours count as
+     * well as mud here, and only here: a block in the middle of a pool is held brown by the pool
+     * around it, so a wallow does not clear itself from the inside while its banks are still mud.
      */
-    private static boolean shouldBeMuddy(Level level, List<BlockPos> body) {
-        if (body.size() > MAX_WALLOW_BLOCKS) return false;
+    private static void tickClearing(ServerLevel level, WallowData data, BlockPos pos, long gameTime) {
+        if (!level.getFluidState(pos).isSource()) return;
 
-        Set<BlockPos> pool = new HashSet<>(body);
-        int mudFaces = 0;
-        int otherFaces = 0;
-
-        for (BlockPos pos : body) {
-            for (Direction direction : Direction.values()) {
-                if (direction == Direction.UP) continue; // open sky is not what contains a puddle
-                BlockPos neighbour = pos.relative(direction);
-                if (pool.contains(neighbour)) continue;
-
-                BlockState state = level.getBlockState(neighbour);
-                if (isMud(state)) {
-                    mudFaces++;
-                } else if (state.is(Blocks.WATER)) {
-                    // Open water feeding into the pool: silt would simply wash away.
-                    return false;
-                } else if (!state.isAir()) {
-                    otherFaces++;
-                }
-            }
+        if (countFaces(level, pos, false) > 0) {
+            data.forget(pos);
+            return;
         }
-        return mudFaces >= MIN_MUD_FACES && mudFaces >= otherFaces;
+
+        if (data.elapsed(pos, WallowData.Change.CLEARING, gameTime) < Config.CLEARING_TICKS.get()) {
+            return;
+        }
+        level.setBlock(pos, Blocks.WATER.defaultBlockState(), Block.UPDATE_ALL);
+        data.forget(pos);
     }
 
-    private static void applyToBody(LevelAccessor level, List<BlockPos> body, boolean muddy) {
-        Block target = muddy ? ModBlocks.MUDDY_WATER_BLOCK.get() : Blocks.WATER;
-        for (BlockPos pos : body) {
-            BlockState state = level.getBlockState(pos);
-            if (isMuddyWater(state) == muddy) continue;
-            level.setBlock(pos, target.defaultBlockState(), Block.UPDATE_ALL);
+    /** Soil sitting under a wallow, soaking through until it is mud itself. */
+    private static void tickSoaking(ServerLevel level, WallowData data, BlockPos pos, long gameTime) {
+        if (!isMuddyWater(level.getBlockState(pos.above()))) {
+            data.forget(pos);
+            return;
         }
+
+        if (data.elapsed(pos, WallowData.Change.SOAKING, gameTime) < Config.SOIL_TO_MUD_TICKS.get()) {
+            return;
+        }
+        level.setBlock(pos, Blocks.MUD.defaultBlockState(), Block.UPDATE_ALL);
+        data.forget(pos);
+    }
+
+    /**
+     * @param mudOnly true to count only real mud, which is what starts a change; false to count
+     *                muddy water as well, which is what sustains one
+     */
+    private static int countFaces(ServerLevel level, BlockPos pos, boolean mudOnly) {
+        int faces = 0;
+        for (Direction direction : Direction.values()) {
+            BlockState neighbour = level.getBlockState(pos.relative(direction));
+            if (mudOnly ? isMud(neighbour) : isWallow(neighbour)) {
+                faces++;
+            }
+        }
+        return faces;
     }
 }

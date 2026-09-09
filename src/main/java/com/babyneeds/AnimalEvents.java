@@ -4,8 +4,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -25,7 +23,6 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
@@ -34,7 +31,6 @@ import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -58,8 +54,8 @@ public class AnimalEvents {
     private static final int DEPENDENT_RECOUNT_TICKS = 100;
     /** Sanity ceiling so a pile of babies on one mother cannot scale her yield without bound. */
     private static final int MAX_DEPENDENTS = 8;
-    /** How far around a change wallow water is re-evaluated, and how often a pig re-checks its own. */
-    private static final int WALLOW_UPDATE_RADIUS = 3;
+    /** How far around itself a pig keeps its own wallow honest. */
+    private static final int PIG_WALLOW_RADIUS = 3;
     private static final int WALLOW_UPDATE_TICKS = 100;
 
     // ------------------------------------------------------------------ lifecycle
@@ -193,7 +189,7 @@ public class AnimalEvents {
         if (species == Species.PIG && Config.MUDDY_WATER.get()
                 && animal.tickCount % WALLOW_UPDATE_TICKS < TICK_STEP
                 && animal.level() instanceof ServerLevel server) {
-            MuddyWater.updateArea(server, animal.blockPosition(), WALLOW_UPDATE_RADIUS);
+            MuddyWater.updateArea(server, animal.blockPosition(), PIG_WALLOW_RADIUS);
         }
     }
 
@@ -410,37 +406,6 @@ public class AnimalEvents {
             AnimalState.setSyncedMuddiness(animal, tenths);
             ModMessages.syncToTracking(animal);
         }
-    }
-
-    // ------------------------------------------------------------------ wallows
-
-    /**
-     * Keeps wallows looking like wallows. Water only silts up where mud is actually touching it, so
-     * the check runs where a player just changed a block - and, on a slow cycle, around pigs, which
-     * catches water poured into a mud hole and mud washed away by a piston or a creeper alike.
-     */
-    @SubscribeEvent
-    static void onBlockPlaced(BlockEvent.EntityPlaceEvent event) {
-        scheduleWallowUpdate(event.getLevel(), event.getPos());
-    }
-
-    @SubscribeEvent
-    static void onBlockBroken(BlockEvent.BreakEvent event) {
-        scheduleWallowUpdate(event.getLevel(), event.getPos());
-    }
-
-    /**
-     * Deferred by one tick on purpose: during these events the block being placed or broken is not
-     * settled yet, so looking at the world now would judge the wallow on a state that is about to
-     * change.
-     */
-    private static void scheduleWallowUpdate(LevelAccessor levelAccessor, BlockPos pos) {
-        if (!Config.MUDDY_WATER.get()) return;
-        if (!(levelAccessor instanceof ServerLevel level)) return;
-
-        MinecraftServer server = level.getServer();
-        server.tell(new TickTask(server.getTickCount() + 1,
-                () -> MuddyWater.updateArea(level, pos, WALLOW_UPDATE_RADIUS)));
     }
 
     // ------------------------------------------------------------------ goals

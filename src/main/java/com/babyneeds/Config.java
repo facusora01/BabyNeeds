@@ -217,6 +217,27 @@ public class Config {
             .comment("How far a pig will go for food lying on the ground.")
             .defineInRange("pig.scavengeRadius", 12.0, 1.0, 64.0);
 
+    public static final ForgeConfigSpec.IntValue SILTING_TICKS = BUILDER
+            .comment("Ticks for clean water with a single block of mud against it to go brown. Each",
+                    "extra mud face divides this, so water boxed in by mud on four sides silts up",
+                    "four times faster - fast, but never instant: a wallow that appears the moment",
+                    "you pour the bucket reads as a block swap rather than as something settling.",
+                    "1200 = one real minute with one muddy bank, fifteen seconds when walled in.")
+            .defineInRange("pig.siltingTicks", 1200, 20, 10000000);
+
+    public static final ForgeConfigSpec.IntValue CLEARING_TICKS = BUILDER
+            .comment("Ticks for muddy water with no mud and no muddy water left against it to settle",
+                    "clear again. Water in the middle of a wallow is held by the pool around it, so",
+                    "this only ever reaches blocks that have been genuinely cut off.")
+            .defineInRange("pig.clearingTicks", 2400, 20, 10000000);
+
+    public static final ForgeConfigSpec.IntValue SOIL_TO_MUD_TICKS = BUILDER
+            .comment("Ticks for dirt, grass or coarse dirt under muddy water to soak through and",
+                    "become mud. This is how a wallow beds itself in: every block it converts makes",
+                    "the water above silt faster, so a puddle in a dirt hollow turns into a proper",
+                    "wallow on its own (6000 = five real minutes).")
+            .defineInRange("pig.soilToMudTicks", 6000, 20, 10000000);
+
     public static final ForgeConfigSpec.BooleanValue MUDDY_WATER = BUILDER
             .comment("Water dug into mud silts up and turns brown, and runs clear again if the mud",
                     "around it is removed. Purely how a wallow looks - a pig gets the same benefit",

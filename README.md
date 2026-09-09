@@ -111,15 +111,20 @@ boats, and the water tag so anything that asks "is this water?" says yes. A flui
 water but does not behave like it is a trap, not a feature - players will treat it as water, because
 it is water, just dirty.
 
-Whether a pool is a wallow is decided for the **whole connected body of water at once**, never block
-by block: it has to be small enough to be a puddle, and mud has to be the majority of what is holding
-it. A hole dug in mud qualifies; a bay at the edge of a lake with one muddy bank does not, and open
-water feeding into a pool washes the silt out of it.
+A wallow forms rather than appears. **One block of mud touching the water is enough** to start it
+going brown; every extra mud face divides the time, so water boxed in on four sides silts up four
+times faster - fast, but never instant, because a puddle that turns the moment you pour the bucket
+reads as a block swap rather than as something settling. Muddy water that ends up with no mud and no
+muddy water left against it settles clear again, though water in the middle of a pool is held by the
+pool around it, so a wallow never clears from the inside out.
 
-Judging single blocks does not work, and it is worth saying why: "muddy water reverts next to clean
-water" is a fine rule for keeping silt out of a lake, but applied one block at a time every block of
-a fresh puddle refuses to turn because its neighbours have not turned yet, and a hole dug entirely in
-mud stays stubbornly blue.
+It also **beds itself in**: dirt, grass or coarse dirt sitting under muddy water soaks through and
+becomes mud, and every block it converts makes the water above silt faster. Flood a dirt hollow and
+come back later to a proper wallow.
+
+All three changes are timestamps rather than counters, so they keep running while nobody is watching
+- a hole flooded ten minutes ago has already gone brown by the time you walk back to it, without the
+mod having spent a tick on it in the meantime.
 
 Because it carries the water tag, **lava treats it exactly as water**: stone, cobblestone and
 obsidian form the same way. Submerged, it looks the part too - the fog goes brown and visibility
@@ -211,6 +216,7 @@ default implies in real minutes. The headline knobs:
 - `pig.eatsCrops` / `pig.eatsScraps` - whether pigs raid gardens and eat dropped food
 - `pig.sitChance` / `pig.wallowChance` - how often pigs sit down and roll in the mud
 - `pig.mudDriesPerMinute` - how long a mud coating lasts
+- `pig.siltingTicks` / `pig.soilToMudTicks` - how fast a wallow forms and beds itself in
 - `loot.juvenileYield` - how much less an adolescent carcass is worth than a grown one
 - `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal
