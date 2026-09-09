@@ -6,6 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -39,8 +40,8 @@ public class GrazeGoal extends Goal {
     private static final int CLOSE_SCAN_RADIUS = 4;
     /** Random probes over the wider range, for when nothing close is left. */
     private static final int FAR_SCAN_SAMPLES = 48;
-    /** Pathfinding is not free, so only the closest few candidates are ever tested. */
-    private static final int MAX_PATH_CHECKS = 6;
+    /** Pathfinding is not free, so only the closest few standing spots are ever tested. */
+    private static final int MAX_PATH_CHECKS = 8;
     private static final int SEARCH_COOLDOWN_TICKS = 60;
     /** Give up on a target that is taking too long: something is in the way. */
     private static final int MAX_TRAVEL_TICKS = 120;
@@ -49,6 +50,7 @@ public class GrazeGoal extends Goal {
     private final Animal animal;
     private final Species species;
     private BlockPos target;
+    private BlockPos standSpot;
     private Path path;
     private int chewTicks;
     private int travelTicks;
@@ -73,6 +75,7 @@ public class GrazeGoal extends Goal {
         searchCooldown = SEARCH_COOLDOWN_TICKS;
 
         this.path = null;
+        this.standSpot = null;
         this.target = findGrassUnderfoot();
         if (target == null) {
             this.target = findReachableGrass();
@@ -106,6 +109,7 @@ public class GrazeGoal extends Goal {
     @Override
     public void stop() {
         target = null;
+        standSpot = null;
         path = null;
         chewTicks = 0;
         travelTicks = 0;
@@ -143,7 +147,7 @@ public class GrazeGoal extends Goal {
     }
 
     private void moveToTarget() {
-        BlockPos stand = standingSpotFor(target);
+        BlockPos stand = standSpot != null ? standSpot : target;
         animal.getNavigation().moveTo(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5, 1.0);
     }
 
@@ -215,20 +219,51 @@ public class GrazeGoal extends Goal {
 
         int checks = 0;
         for (BlockPos candidate : candidates) {
-            if (checks++ >= MAX_PATH_CHECKS) break;
+            for (BlockPos spot : standingSpotsFor(candidate)) {
+                if (checks++ >= MAX_PATH_CHECKS) return null;
 
-            Path candidatePath = animal.getNavigation().createPath(standingSpotFor(candidate), 0);
-            if (candidatePath == null || !candidatePath.canReach()) continue;
+                Path candidatePath = animal.getNavigation().createPath(spot, 0);
+                if (candidatePath == null || !candidatePath.canReach()) continue;
 
-            this.path = candidatePath;
-            return candidate;
+                this.path = candidatePath;
+                this.standSpot = spot;
+                return candidate;
+            }
         }
         return null;
     }
 
-    /** Turf is eaten from on top of it; a tuft of grass is eaten from inside it. */
-    private BlockPos standingSpotFor(BlockPos pos) {
-        return animal.level().getBlockState(pos).is(Blocks.GRASS_BLOCK) ? pos.above() : pos;
+    /**
+     * Every spot the animal could stand in to reach this mouthful, best first. Turf is normally
+     * grazed from on top of it and a tuft from inside it, but when something is standing on the
+     * block - a fence post, a wall, a torch - that spot does not exist and the naive version wrote
+     * the block off as unreachable. That is what left a ring of untouched grass under the fence
+     * line of a pen whose animals were starving inside it, so the neighbouring spots count too:
+     * cattle graze right up to and through a fence.
+     */
+    private List<BlockPos> standingSpotsFor(BlockPos pos) {
+        BlockPos onTop = animal.level().getBlockState(pos).is(Blocks.GRASS_BLOCK) ? pos.above() : pos;
+
+        List<BlockPos> spots = new ArrayList<>(5);
+        if (isStandable(onTop)) {
+            spots.add(onTop);
+        }
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockPos beside = onTop.relative(direction);
+            if (isStandable(beside)) {
+                spots.add(beside);
+            }
+        }
+        return spots;
+    }
+
+    /**
+     * Cheap filter before spending a pathfind: somewhere the animal could plausibly stand. Grass and
+     * ferns count - it walks straight through them - fences, walls and slabs do not.
+     */
+    private boolean isStandable(BlockPos pos) {
+        BlockState state = animal.level().getBlockState(pos);
+        return state.isAir() || isEdible(state);
     }
 
     private List<BlockPos> collectCandidates() {
