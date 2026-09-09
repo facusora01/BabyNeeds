@@ -427,7 +427,7 @@ public class Config {
             .comment("Tilt added to the trunk when sitting, in radians. Negative drops the rump and",
                     "lifts the chest, which is sitting; positive raises the rump, which is a pig",
                     "doing a handstand.")
-            .defineInRange("animation.sitBodyTilt", -0.35, -1.5, 1.5);
+            .defineInRange("animation.sitBodyTilt", -0.785, -1.5, 1.5);
 
     public static final ForgeConfigSpec.DoubleValue SIT_BODY_ANCHOR = BUILDER
             .comment("How far forward, in model units, the point of the trunk that stays put while the",
@@ -439,7 +439,7 @@ public class Config {
 
     public static final ForgeConfigSpec.DoubleValue SIT_BODY_DROP = BUILDER
             .comment("Extra sink on top of what anchoring the chest already works out, for taste.")
-            .defineInRange("animation.sitBodyDrop", 0.0, -8.0, 8.0);
+            .defineInRange("animation.sitBodyDrop", -1.5, -8.0, 8.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_BODY_SHIFT = BUILDER
             .comment("How far the trunk slides backwards as it settles.")
@@ -453,12 +453,12 @@ public class Config {
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_FOLD = BUILDER
             .comment("Rotation of the hind legs, in radians. Negative swings the feet forwards under",
                     "the animal, which is what sitting looks like; positive kicks them out behind it.")
-            .defineInRange("animation.sitHindFold", -0.9, -2.0, 2.0);
+            .defineInRange("animation.sitHindFold", -1.3, -2.0, 2.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_DROP = BUILDER
             .comment("How far the hind leg pivots move down. Folding a leg forwards shortens how far",
                     "it reaches below its pivot, so without a little of this the feet hang in the air.")
-            .defineInRange("animation.sitHindDrop", 1.5, -8.0, 8.0);
+            .defineInRange("animation.sitHindDrop", 4.0, -8.0, 8.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_SHIFT = BUILDER
             .comment("How far the hind legs slide forwards (negative) or backwards (positive).")
