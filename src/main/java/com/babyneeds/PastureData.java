@@ -91,6 +91,17 @@ public class PastureData extends SavedData {
         return before;
     }
 
+    /**
+     * How often this patch has been rooted since it last recovered, without touching anything. The
+     * counterpart to {@link #root}, for deciding whether a patch is worth walking to at all.
+     */
+    public int rootsAt(BlockPos pos, long gameTime, int recoveryTicks) {
+        Plot plot = plots.get(pos.asLong());
+        if (plot == null) return 0;
+        if (gameTime - plot.lastRooted > recoveryTicks) return 0;
+        return plot.roots;
+    }
+
     /** Ticks this block has been bare, or 0 if it is not being tracked. */
     public long bareTicks(BlockPos pos, long gameTime) {
         Plot plot = plots.get(pos.asLong());

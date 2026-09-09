@@ -67,6 +67,14 @@ public abstract class BlockConsumingGoal extends Goal {
     /** Blocks this animal will walk to and eat. */
     protected abstract boolean isTarget(BlockState state);
 
+    /**
+     * The same question, for a block that is actually somewhere. Ground a pig has already worked
+     * over is still dirt but is no longer worth its time, and only the position can say so.
+     */
+    protected boolean isTargetAt(BlockPos pos, BlockState state) {
+        return isTarget(state);
+    }
+
     /** Take the mouthful: change the world, feed the animal. */
     protected abstract void consume(BlockPos pos, BlockState state);
 
@@ -107,7 +115,7 @@ public abstract class BlockConsumingGoal extends Goal {
         if (AnimalState.pose(animal).isResting()) return false;
         // Dropped rather than starved over: if it has not arrived by now, it is not getting there.
         if (travelTicks > MAX_TRAVEL_TICKS) return false;
-        return isTarget(animal.level().getBlockState(target));
+        return isTargetAt(target, animal.level().getBlockState(target));
     }
 
     @Override
@@ -166,7 +174,7 @@ public abstract class BlockConsumingGoal extends Goal {
         if (++chewTicks < chewDuration()) return;
 
         BlockState state = animal.level().getBlockState(target);
-        if (isTarget(state)) {
+        if (isTargetAt(target, state)) {
             consume(target, state);
         }
         target = null;
@@ -200,10 +208,10 @@ public abstract class BlockConsumingGoal extends Goal {
     private BlockPos findUnderfoot() {
         Level level = animal.level();
         BlockPos at = animal.blockPosition();
-        if (isTarget(level.getBlockState(at))) return at;
+        if (isTargetAt(at, level.getBlockState(at))) return at;
 
         BlockPos below = at.below();
-        return isTarget(level.getBlockState(below)) ? below : null;
+        return isTargetAt(below, level.getBlockState(below)) ? below : null;
     }
 
     /**
@@ -279,7 +287,7 @@ public abstract class BlockConsumingGoal extends Goal {
             for (int dz = -CLOSE_SCAN_RADIUS; dz <= CLOSE_SCAN_RADIUS; dz++) {
                 for (int dy = -2; dy <= 1; dy++) {
                     BlockPos pos = origin.offset(dx, dy, dz);
-                    if (isTarget(level.getBlockState(pos))) {
+                    if (isTargetAt(pos, level.getBlockState(pos))) {
                         found.add(pos.immutable());
                     }
                 }
@@ -295,7 +303,7 @@ public abstract class BlockConsumingGoal extends Goal {
                     random.nextInt(radius * 2 + 1) - radius,
                     random.nextInt(5) - 2,
                     random.nextInt(radius * 2 + 1) - radius);
-            if (isTarget(level.getBlockState(pos))) {
+            if (isTargetAt(pos, level.getBlockState(pos))) {
                 found.add(pos.immutable());
             }
         }

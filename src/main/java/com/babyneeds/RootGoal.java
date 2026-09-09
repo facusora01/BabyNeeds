@@ -35,6 +35,22 @@ public class RootGoal extends BlockConsumingGoal {
                 || MuddyWater.isMud(state);
     }
 
+    /**
+     * A patch that has already been worked over until there is nothing left in it is still dirt, so
+     * it still looks like a target - and a pig that keeps choosing it stands there rooting bare
+     * ground for nothing while fresh soil sits a few blocks away. Exhausted ground is therefore not
+     * a target at all until it has recovered.
+     */
+    @Override
+    protected boolean isTargetAt(BlockPos pos, BlockState state) {
+        if (!isTarget(state)) return false;
+        if (!(animal.level() instanceof ServerLevel server)) return true;
+
+        int timesRooted = PastureData.get(server).rootsAt(pos, server.getGameTime(),
+                Config.ROOT_RECOVERY_TICKS.get());
+        return timesRooted < Config.MAX_ROOTS_PER_BLOCK.get();
+    }
+
     @Override
     protected int chewDuration() {
         return Config.ROOT_TICKS.get();

@@ -42,6 +42,11 @@ public class RestGoal extends Goal {
         // Anything more pressing - hunger, a litter waiting to nurse, being chased - wins, because
         // those goals sit at a higher priority and this one simply never gets the chance to run.
         if (animal.getLastHurtByMob() != null) return false;
+        // Hunger beats comfort, always. Without this a pig standing in its own wallow rolls in it
+        // roughly every ten seconds, and while it is settled the pose goal holds the right to move
+        // away from every feeding goal there is - so a hungry pig wallows instead of eating, and
+        // goes on wallowing until it starves.
+        if (isHungry()) return false;
 
         if (inWallow() && AnimalState.muddiness(animal) < 1.0
                 && animal.getRandom().nextInt(Config.WALLOW_CHANCE.get()) == 0) {
@@ -50,8 +55,7 @@ public class RestGoal extends Goal {
             return true;
         }
 
-        if (AnimalState.nutrition(animal) >= Config.GRAZE_THRESHOLD.get()
-                && animal.getRandom().nextInt(Config.SIT_CHANCE.get()) == 0) {
+        if (animal.getRandom().nextInt(Config.SIT_CHANCE.get()) == 0) {
             chosenPose = PigPose.SITTING;
             duration = Config.SIT_TICKS.get() / 2 + animal.getRandom().nextInt(Config.SIT_TICKS.get());
             return true;
@@ -63,6 +67,8 @@ public class RestGoal extends Goal {
     public boolean canContinueToUse() {
         if (restingTicks >= duration) return false;
         if (animal.getLastHurtByMob() != null) return false;
+        // Gets up to eat if it goes hungry mid-wallow.
+        if (isHungry()) return false;
         if (chosenPose == PigPose.WALLOWING && !inWallow()) return false;
         return AnimalState.pose(animal) == chosenPose;
     }
@@ -109,6 +115,10 @@ public class RestGoal extends Goal {
         if (restingTicks % 25 == 0) {
             animal.playSound(SoundEvents.MUD_STEP, 0.7f, 0.8f + animal.getRandom().nextFloat() * 0.3f);
         }
+    }
+
+    private boolean isHungry() {
+        return HungerCalculator.wantsToGraze(AnimalState.nutrition(animal), Config.GRAZE_THRESHOLD.get());
     }
 
     private boolean inWallow() {
