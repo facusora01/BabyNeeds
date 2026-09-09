@@ -190,6 +190,26 @@ public class Config {
                     "max of 4, a litter that happens is about 69% twins, 18% triplets, 13% quads.")
             .defineInRange("pig.litterRarityExponent", 3.0, 1.0, 10.0);
 
+    // ---------------------------------------------------------------- carcass condition
+
+    public static final ForgeConfigSpec.BooleanValue CONDITION_AFFECTS_DROPS = BUILDER
+            .comment("Scale what an animal drops by the condition it died in. A starved carcass is",
+                    "skin and bone and cannot yield the meat and hide of a well fed one.")
+            .define("loot.conditionAffectsDrops", true);
+
+    public static final ForgeConfigSpec.DoubleValue STARVED_DROP_MULTIPLIER = BUILDER
+            .comment("What the worst carcass yields, as a fraction of normal. 0.25 = a quarter.",
+                    "An animal that starved to death always lands exactly here. Fractions are settled",
+                    "by a roll, so a single hide at 0.25 is a 25% chance of a hide, not a guaranteed",
+                    "nothing.")
+            .defineInRange("loot.starvedDropMultiplier", 0.25, 0.0, 1.0);
+
+    public static final ForgeConfigSpec.DoubleValue FULL_CONDITION_NUTRITION = BUILDER
+            .comment("Nutrition at which a carcass is in full condition and drops normally. Below it",
+                    "the yield slides towards starvedDropMultiplier, so butchering a hungry herd is",
+                    "already a loss before anything actually dies of hunger.")
+            .defineInRange("loot.fullConditionNutrition", 50.0, 0.0, 100.0);
+
     // ---------------------------------------------------------------- misc
 
     public static final ForgeConfigSpec.BooleanValue SHOW_STATUS_ON_SNEAK = BUILDER

@@ -78,6 +78,16 @@ instead of a single piglet - about 8% of births, and the bigger the litter the r
 same udder, so a big litter on a thin sow is a real problem rather than free pork. Without mud
 anywhere near her, a sow throws one piglet like everything else.
 
+## Carcass condition
+
+An animal that starved to death is skin and bone, and drops accordingly: a quarter of its normal
+meat and hide by default. The same scale runs on animals butchered while underfed, sliding from a
+full carcass at good condition down to the starved floor, so neglecting a herd costs the player
+real yield even when they slaughter before hunger does.
+
+Fractions are settled by a roll rather than rounded, so a single hide at quarter condition is a 25%
+chance of a hide, not a guaranteed nothing. Turn the whole thing off with `loot.conditionAffectsDrops`.
+
 ## Commands
 
 All require permission level 2, and act on animals within 8 blocks:
@@ -104,6 +114,7 @@ default implies in real minutes. The headline knobs:
 - `pasture.recoveryGraceTicks` - how long bare ground is safe before it can ever be lost
 - `pasture.trampleThreshold` / `pasture.compactMaxChance` - how much traffic ruins soil, and how fast
 - `pig.mudLitterChance` / `pig.maxLitterSize` - the mud wallow payoff
+- `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal
 
 ## Building

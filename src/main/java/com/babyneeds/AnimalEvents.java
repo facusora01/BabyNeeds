@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.goat.Goat;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -25,6 +27,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.BabyEntitySpawnEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -32,6 +35,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -318,6 +322,39 @@ public class AnimalEvents {
         int grace = (Config.STARVATION_GRACE_TICKS.get() / TICK_STEP) * TICK_STEP;
         if (HungerCalculator.shouldTakeStarvationDamage(nutrition, starving, grace, interval)) {
             animal.hurt(animal.damageSources().starve(), Config.STARVATION_DAMAGE.get().floatValue());
+        }
+    }
+
+    /**
+     * Body condition applied to the carcass. A starved animal always yields the worst possible
+     * drop, and one butchered while underfed yields somewhere in between, so a neglected herd is
+     * worth less meat and less leather even if the player kills it before hunger does.
+     */
+    @SubscribeEvent
+    static void onLivingDrops(LivingDropsEvent event) {
+        if (Config.UNINSTALL_MODE.get()) return;
+        if (!Config.CONDITION_AFFECTS_DROPS.get()) return;
+        if (!(event.getEntity() instanceof Animal animal) || !AnimalState.isSupported(animal)) return;
+        if (!AnimalState.isInitialized(animal)) return;
+
+        boolean starved = event.getSource().is(DamageTypes.STARVE);
+        double multiplier = LootCalculator.dropMultiplier(
+                AnimalState.nutrition(animal),
+                starved,
+                Config.FULL_CONDITION_NUTRITION.get(),
+                Config.STARVED_DROP_MULTIPLIER.get());
+        if (multiplier >= 1.0) return;
+
+        Iterator<ItemEntity> drops = event.getDrops().iterator();
+        while (drops.hasNext()) {
+            ItemStack stack = drops.next().getItem();
+            int scaled = LootCalculator.scaleCount(stack.getCount(), multiplier,
+                    animal.getRandom().nextDouble());
+            if (scaled <= 0) {
+                drops.remove();
+            } else {
+                stack.setCount(scaled);
+            }
         }
     }
 
