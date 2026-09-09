@@ -11,6 +11,7 @@
   "babyneeds.msg.baby_only_milk": "Un recién nacido solo puede tomar leche.",
   "babyneeds.msg.too_young_to_milk": "Este animal es demasiado joven para ordeñar.",
   "babyneeds.msg.too_young_to_shear": "Este animal es demasiado joven para esquilar.",
+  "babyneeds.msg.no_milk": "No está en leche: solo se puede ordeñar a una madre que haya parido.",
   "babyneeds.msg.udder_empty": "No hay leche de sobra: está amamantando a una cría.",
 
   "babyneeds.cmd.none_nearby": "No hay animales de BabyNeeds en 8 bloques.",

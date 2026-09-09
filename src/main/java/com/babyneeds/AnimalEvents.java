@@ -398,51 +398,78 @@ public class AnimalEvents {
     static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
         if (Config.UNINSTALL_MODE.get()) return;
         if (!(event.getTarget() instanceof Animal animal) || !AnimalState.isSupported(animal)) return;
-        if (!AnimalState.isInitialized(animal)) return;
 
         Player player = event.getEntity();
         ItemStack stack = event.getItemStack();
+
+        if (player.level().isClientSide()) {
+            handleClientPrediction(event, animal, player, stack);
+            return;
+        }
+        if (!AnimalState.isInitialized(animal)) return;
+
         GrowthStage stage = AnimalState.stage(animal);
-        boolean serverSide = !player.level().isClientSide();
 
         if (Config.SHOW_STATUS_ON_SNEAK.get() && player.isShiftKeyDown() && stack.isEmpty()) {
-            if (serverSide) sendStatus(player, animal);
+            sendStatus(player, animal);
             cancel(event);
             return;
         }
 
         if (stack.is(Items.MILK_BUCKET) && GrowthCalculator.acceptsMilk(stage)
                 && Config.ALLOW_BOTTLE_FEEDING.get()) {
-            if (serverSide) bottleFeed(player, animal, stack, stage);
+            bottleFeed(player, animal, stack, stage);
             cancel(event);
             return;
         }
 
         if (stack.is(Items.BUCKET) && (animal instanceof Cow || animal instanceof Goat)) {
-            if (!handleMilking(player, animal, stage, serverSide)) {
+            if (!handleMilking(player, animal, stage)) {
                 cancel(event);
             }
             return;
         }
 
         if (stack.is(Items.SHEARS) && Config.RESTRICT_PRODUCE_TO_ADULTS.get() && stage != GrowthStage.ADULT) {
-            if (serverSide) message(player, "babyneeds.msg.too_young_to_shear", ChatFormatting.RED);
+            message(player, "babyneeds.msg.too_young_to_shear", ChatFormatting.RED);
             cancel(event);
             return;
         }
 
         if (animal.isFood(stack)) {
-            handleFeeding(event, player, animal, stack, stage, serverSide);
+            handleFeeding(event, player, animal, stack, stage);
+        }
+    }
+
+    /**
+     * The client knows nothing about nutrition, milk or stage progress - that state never leaves
+     * the server - so it must not guess at the outcome of an interaction the mod governs. Left to
+     * itself, vanilla's client-side prediction runs {@code Cow#mobInteract} locally and puts a milk
+     * bucket in the player's hand from a cow whose udder the server knows is empty; the item is a
+     * ghost that survives until the next inventory sync.
+     *
+     * So the client simply cancels every case the mod decides, does nothing, and waits. The
+     * interaction packet has already been sent by the time this fires, so the server still gets its
+     * say and its answer is the only one that counts.
+     */
+    private static void handleClientPrediction(PlayerInteractEvent.EntityInteract event,
+                                               Animal animal, Player player, ItemStack stack) {
+        boolean governed = (Config.SHOW_STATUS_ON_SNEAK.get() && player.isShiftKeyDown() && stack.isEmpty())
+                || (stack.is(Items.MILK_BUCKET) && Config.ALLOW_BOTTLE_FEEDING.get())
+                || (stack.is(Items.BUCKET) && (animal instanceof Cow || animal instanceof Goat))
+                || (stack.is(Items.SHEARS) && Config.RESTRICT_PRODUCE_TO_ADULTS.get())
+                || animal.isFood(stack);
+        if (governed) {
+            cancel(event);
         }
     }
 
     /** Hand feeding: a rescue for a hungry animal, never a shortcut past a stage. */
     private static void handleFeeding(PlayerInteractEvent.EntityInteract event, Player player,
-                                      Animal animal, ItemStack stack, GrowthStage stage,
-                                      boolean serverSide) {
+                                      Animal animal, ItemStack stack, GrowthStage stage) {
         if (stage == GrowthStage.ADULT) {
             // Vanilla still handles love mode; nutrition only counts when the food is really eaten.
-            if (serverSide && animal.canFallInLove()) {
+            if (animal.canFallInLove()) {
                 feedNutrition(animal, Config.FEED_ITEM_NUTRITION.get());
             }
             return;
@@ -451,7 +478,6 @@ public class AnimalEvents {
         // Below adult, vanilla would age the animal up on the spot - that is exactly what the mod
         // takes over, so the interaction is replaced instead of extended.
         cancel(event);
-        if (!serverSide) return;
 
         if (!GrowthCalculator.acceptsSolids(stage)) {
             message(player, "babyneeds.msg.baby_only_milk", ChatFormatting.RED);
@@ -470,9 +496,9 @@ public class AnimalEvents {
     /**
      * @return true when vanilla should continue and hand the player their milk bucket
      */
-    private static boolean handleMilking(Player player, Animal animal, GrowthStage stage, boolean serverSide) {
+    private static boolean handleMilking(Player player, Animal animal, GrowthStage stage) {
         if (Config.RESTRICT_PRODUCE_TO_ADULTS.get() && stage != GrowthStage.ADULT) {
-            if (serverSide) message(player, "babyneeds.msg.too_young_to_milk", ChatFormatting.RED);
+            message(player, "babyneeds.msg.too_young_to_milk", ChatFormatting.RED);
             return false;
         }
 
@@ -481,15 +507,14 @@ public class AnimalEvents {
         int dependents = AnimalState.isLactating(animal) ? AnimalState.dependents(animal) : 0;
         if (!LactationCalculator.canBeMilkedByPlayer(milk, cost, dependents,
                 Config.MILK_RESERVE_FOR_CHILD.get())) {
-            if (serverSide) message(player, "babyneeds.msg.udder_empty", ChatFormatting.YELLOW);
+            message(player, dependents > 0 ? "babyneeds.msg.udder_empty" : "babyneeds.msg.no_milk",
+                    ChatFormatting.YELLOW);
             return false;
         }
 
-        if (serverSide) {
-            AnimalState.setMilk(animal, milk - cost);
-            // Being milked is demand: it keeps her in lactation the same way a calf does.
-            AnimalState.refreshLactation(animal);
-        }
+        AnimalState.setMilk(animal, milk - cost);
+        // Being milked is demand: it keeps her in lactation the same way a calf does.
+        AnimalState.refreshLactation(animal);
         return true;
     }
 

@@ -11,6 +11,7 @@
   "babyneeds.msg.baby_only_milk": "A newborn can only drink milk.",
   "babyneeds.msg.too_young_to_milk": "This animal is too young to be milked.",
   "babyneeds.msg.too_young_to_shear": "This animal is too young to be sheared.",
+  "babyneeds.msg.no_milk": "She is not in milk - only a mother that has given birth can be milked.",
   "babyneeds.msg.udder_empty": "There is no milk to spare - she is feeding a baby.",
 
   "babyneeds.cmd.none_nearby": "No BabyNeeds animals within 8 blocks.",
