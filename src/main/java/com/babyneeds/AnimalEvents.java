@@ -28,6 +28,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
@@ -407,6 +408,23 @@ public class AnimalEvents {
 
         if (pose.isResting() && animal.getDeltaMovement().horizontalDistanceSqr() > 0.003) {
             setPose(animal, PigPose.STANDING);
+        }
+    }
+
+    /**
+     * Pins a settled animal to the spot it settled on. Stopping its navigation is not enough: other
+     * animals shoulder past it and shove it along the ground, so a nursing sow would drift away from
+     * her own litter while lying down. An animal that has lain down stays lain down, where it lay,
+     * until it gets up.
+     */
+    static void holdStill(Animal animal, Vec3 restingSpot) {
+        animal.getNavigation().stop();
+        animal.setDeltaMovement(0.0, Math.min(0.0, animal.getDeltaMovement().y), 0.0);
+
+        if (restingSpot == null) return;
+        if (animal.position().distanceToSqr(restingSpot) > 0.02) {
+            animal.moveTo(restingSpot.x, restingSpot.y, restingSpot.z,
+                    animal.getYRot(), animal.getXRot());
         }
     }
 

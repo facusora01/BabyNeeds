@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A sow settling down for a nursing bout. Pigs cannot nurse standing up, so unlike a cow - whose
@@ -17,6 +18,7 @@ public class SowNursingGoal extends Goal {
 
     private final Animal sow;
     private int lyingTicks;
+    private Vec3 restingSpot;
 
     public SowNursingGoal(Animal sow) {
         this.sow = sow;
@@ -43,6 +45,7 @@ public class SowNursingGoal extends Goal {
     @Override
     public void start() {
         lyingTicks = 0;
+        restingSpot = sow.position();
         sow.getNavigation().stop();
         AnimalEvents.setPose(sow, PigPose.LYING);
     }
@@ -58,8 +61,7 @@ public class SowNursingGoal extends Goal {
     @Override
     public void tick() {
         lyingTicks++;
-        sow.getNavigation().stop();
-        sow.setDeltaMovement(0.0, sow.getDeltaMovement().y, 0.0);
+        AnimalEvents.holdStill(sow, restingSpot);
     }
 
     /** Only her own babies count; a neighbour's piglets will not make her lie down. */

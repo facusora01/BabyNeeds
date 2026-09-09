@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.Blocks;
 
 /**
@@ -21,6 +22,7 @@ import net.minecraft.world.level.block.Blocks;
 public class RestGoal extends Goal {
 
     private final Animal animal;
+    private Vec3 restingSpot;
     private PigPose chosenPose;
     private int restingTicks;
     private int duration;
@@ -65,6 +67,7 @@ public class RestGoal extends Goal {
     @Override
     public void start() {
         restingTicks = 0;
+        restingSpot = animal.position();
         animal.getNavigation().stop();
         AnimalEvents.setPose(animal, chosenPose);
     }
@@ -80,8 +83,7 @@ public class RestGoal extends Goal {
     @Override
     public void tick() {
         restingTicks++;
-        animal.getNavigation().stop();
-        animal.setDeltaMovement(0.0, animal.getDeltaMovement().y, 0.0);
+        AnimalEvents.holdStill(animal, restingSpot);
 
         if (chosenPose == PigPose.WALLOWING) {
             wallow();

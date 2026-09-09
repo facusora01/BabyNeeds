@@ -2,6 +2,7 @@ package com.babyneeds;
 
 import net.minecraft.client.model.PigModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.animal.Pig;
 
 /**
@@ -67,11 +68,22 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         // twice. This way the file can be edited with the game running and the pig changes shape
         // under you until it looks right.
 
-        // The rump goes down and the trunk tips with it. Absolute rather than additive, so the pose
-        // never depends on what was left behind by the frame before.
-        body.y = restBodyY + Config.SIT_BODY_DROP.get().floatValue() * sit;
-        body.z = restBodyZ + Config.SIT_BODY_SHIFT.get().floatValue() * sit;
-        body.xRot = FLAT + Config.SIT_BODY_TILT.get().floatValue() * sit;
+        // A part rotates about its own pivot, and the body's pivot is in the middle of the animal,
+        // so tilting the trunk on its own seesaws it: the rump sinks and the chest lifts clear of the
+        // front legs. Both earlier attempts looked wrong for that reason rather than because of the
+        // direction - one was a seesaw one way, one was a seesaw the other.
+        //
+        // Anchoring a point at the shoulders turns the seesaw into sitting: work out where the tilt
+        // would carry that point, then slide the whole trunk back so it does not move at all. What is
+        // left over is the rump going down by itself, which is the motion being drawn.
+        float tilt = Config.SIT_BODY_TILT.get().floatValue() * sit;
+        float anchor = Config.SIT_BODY_ANCHOR.get().floatValue();
+
+        body.xRot = FLAT + tilt;
+        body.y = restBodyY + anchor * Mth.sin(tilt)
+                + Config.SIT_BODY_DROP.get().floatValue() * sit;
+        body.z = restBodyZ - anchor * (1.0f - Mth.cos(tilt))
+                + Config.SIT_BODY_SHIFT.get().floatValue() * sit;
 
         // The head keeps its own pitch - it is a sibling of the body, not a child, so it goes on
         // looking wherever the pig is looking instead of being swung skywards with the chest.
