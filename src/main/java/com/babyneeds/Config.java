@@ -395,7 +395,7 @@ public class Config {
                     "radius, in other words, because that is what a body rolling on the ground",
                     "covers. Zero makes it spin on the spot; a negative value rolls it the other way",
                     "if the travel comes out backwards.")
-            .defineInRange("animation.wallowRollRadius", 0.45, -2.0, 2.0);
+            .defineInRange("animation.wallowRollRadius", -0.45, -2.0, 2.0);
 
     public static final ForgeConfigSpec.DoubleValue WALLOW_ROLL_HEIGHT = BUILDER
             .comment("Height of the axis a rolling animal turns about, in blocks above its feet. A",
