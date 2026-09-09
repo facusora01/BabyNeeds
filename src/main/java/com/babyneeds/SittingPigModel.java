@@ -41,6 +41,9 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
     private final float restBodyY;
     private final float restBodyZ;
     private final float restHeadY;
+    private final float restHeadZ;
+    private final float restFrontY;
+    private final float restFrontZ;
     private final float restHindY;
     private final float restHindZ;
 
@@ -51,6 +54,9 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         this.restBodyY = body.y;
         this.restBodyZ = body.z;
         this.restHeadY = head.y;
+        this.restHeadZ = head.z;
+        this.restFrontY = rightFrontLeg.y;
+        this.restFrontZ = rightFrontLeg.z;
         this.restHindY = rightHindLeg.y;
         this.restHindZ = rightHindLeg.z;
     }
@@ -74,6 +80,11 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         body.y = restBodyY;
         body.z = restBodyZ;
         head.y = restHeadY;
+        head.z = restHeadZ;
+        rightFrontLeg.y = restFrontY;
+        leftFrontLeg.y = restFrontY;
+        rightFrontLeg.z = restFrontZ;
+        leftFrontLeg.z = restFrontZ;
         rightHindLeg.y = restHindY;
         leftHindLeg.y = restHindY;
         rightHindLeg.z = restHindZ;
@@ -98,10 +109,12 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         body.y = restBodyY + (anchorY - carriedY);
         body.z = restBodyZ + (anchorZ - carriedZ);
 
-        // The head is a sibling of the body rather than a child, so it stays put and goes on looking
-        // wherever the pig is looking - which is what a sitting animal does. With the chest anchored
-        // the chest barely moves, so neither should it.
+        // The head is a sibling of the body rather than a child, so it holds still on its own and
+        // goes on looking wherever the pig is looking. The pitch here is added to that rather than
+        // replacing it, so a sitting pig still tracks whatever it is watching.
         head.y = restHeadY + Config.SIT_HEAD_DROP.get().floatValue() * sit;
+        head.z = restHeadZ + Config.SIT_HEAD_SHIFT.get().floatValue() * sit;
+        head.xRot += Config.SIT_HEAD_PITCH.get().floatValue() * sit;
 
         // Hind legs fold forward and lie along the ground. Folded flat, a leg no longer reaches the
         // six units below its pivot that it does standing, so the pivot drops to make up the
@@ -114,7 +127,17 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         rightHindLeg.z = restHindZ + Config.SIT_HIND_SHIFT.get().floatValue() * sit;
         leftHindLeg.z = rightHindLeg.z;
 
-        // The front pair is left exactly as vanilla put it: straight, planted, holding the chest up.
+        // The front pair defaults to exactly what vanilla put there - straight, planted, holding the
+        // chest up - but it is posable too, because a pig sitting right back on its rump leans them.
+        float frontFold = Config.SIT_FRONT_FOLD.get().floatValue() * sit;
+        if (frontFold != 0.0f) {
+            rightFrontLeg.xRot = frontFold;
+            leftFrontLeg.xRot = frontFold;
+        }
+        rightFrontLeg.y = restFrontY + Config.SIT_FRONT_DROP.get().floatValue() * sit;
+        leftFrontLeg.y = rightFrontLeg.y;
+        rightFrontLeg.z = restFrontZ + Config.SIT_FRONT_SHIFT.get().floatValue() * sit;
+        leftFrontLeg.z = rightFrontLeg.z;
     }
 
     /** 0 standing, 1 fully sat, eased - the same value the rest of the mod's animation runs on. */
