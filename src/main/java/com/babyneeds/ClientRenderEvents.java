@@ -95,28 +95,43 @@ public class ClientRenderEvents {
         float forwardX = -(float) Math.sin(radians);
         float forwardZ = (float) Math.cos(radians);
 
-        if (side > 0.0f) {
-            // Going down is not the same shape as being down: the body drops as it rolls, and the
-            // lift only reaches its full height once it is actually on its flank. Rolling about a
-            // fixed high pivot is what left a lying sow hanging in the air.
-            float lift = Config.LIE_LIFT.get().floatValue() * side * side;
-            if (entry.pose() == PigPose.WALLOWING) {
-                lift -= Config.WALLOW_SINK.get().floatValue() * side;
-            }
-            pose.translate(0.0, lift, 0.0);
+        if (side <= 0.0f) return;
 
-            float roll = Config.LIE_ANGLE.get().floatValue() * side;
-            if (entry.pose() == PigPose.WALLOWING) {
-                // Worked out from the game time the roll began rather than from a local stopwatch,
-                // because the server is moving the animal sideways off the very same function. Any
-                // other clock and the pig would slide instead of roll.
-                double phase = WallowRoll.phase(entity.level().getGameTime(), partialTick,
-                        entry.poseStart(), Config.WALLOW_ROLL_SPEED.get());
-                roll += (float) Math.toDegrees(
-                        WallowRoll.angle(phase, Config.WALLOW_ROLL_ANGLE.get())) * side;
-            }
-            pose.mulPose(new Quaternionf().rotateAxis(
-                    (float) Math.toRadians(roll), forwardX, 0.0f, forwardZ));
+        boolean rolling = entry.pose() == PigPose.WALLOWING;
+        float roll;
+        float axisHeight;
+
+        if (rolling) {
+            // Worked out from the game time the roll began rather than from a local stopwatch,
+            // because the server is moving the animal sideways off the very same function. Any
+            // other clock and the pig would slide instead of roll.
+            double phase = WallowRoll.phase(entity.level().getGameTime(), partialTick,
+                    entry.poseStart(), Config.WALLOW_ROLL_SPEED.get());
+            roll = (float) Math.toDegrees(WallowRoll.angle(phase, Config.WALLOW_ROLL_ANGLE.get())) * side;
+
+            // A rolling body turns about the axis running through its middle, a radius off the
+            // ground - not about its feet. Turning it about its feet is a pendulum: it swings rather
+            // than rolls, and anything past a quarter turn swings the body underground, which is
+            // why a wallowing pig disappeared into the dirt.
+            axisHeight = Config.WALLOW_ROLL_HEIGHT.get().floatValue();
+            pose.translate(0.0, -Config.WALLOW_SINK.get().floatValue() * side, 0.0);
+        } else {
+            // Lying down is not rolling: a sow settling onto her flank really does pivot about the
+            // ground she is lying on, and the lift is what keeps her flank from sinking through it.
+            roll = Config.LIE_ANGLE.get().floatValue() * side;
+            axisHeight = 0.0f;
+            pose.translate(0.0, Config.LIE_LIFT.get().floatValue() * side * side, 0.0);
         }
+
+        Quaternionf rotation = new Quaternionf()
+                .rotateAxis((float) Math.toRadians(roll), forwardX, 0.0f, forwardZ);
+
+        if (axisHeight == 0.0f) {
+            pose.mulPose(rotation);
+            return;
+        }
+        pose.translate(0.0, axisHeight, 0.0);
+        pose.mulPose(rotation);
+        pose.translate(0.0, -axisHeight, 0.0);
     }
 }

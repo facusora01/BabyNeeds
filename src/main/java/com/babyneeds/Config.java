@@ -364,8 +364,9 @@ public class Config {
     public static final ForgeConfigSpec.DoubleValue LIE_ANGLE = BUILDER
             .comment("How far an animal rolls onto its flank when it lies down, in degrees. 90 is",
                     "flat on its side, which is what a nursing sow needs to be so her litter can",
-                    "reach her.")
-            .defineInRange("animation.lieAngle", 0.0, 0.0, 180.0);
+                    "reach her. This is lying only - a wallowing animal rolls right through upright",
+                    "and past it, and takes its angle from wallowRollAngle instead.")
+            .defineInRange("animation.lieAngle", 90.0, 0.0, 180.0);
 
     public static final ForgeConfigSpec.DoubleValue LIE_LIFT = BUILDER
             .comment("How far the body rises as it rolls, in blocks. An animal on its side is about",
@@ -396,10 +397,18 @@ public class Config {
                     "if the travel comes out backwards.")
             .defineInRange("animation.wallowRollRadius", 0.45, -2.0, 2.0);
 
+    public static final ForgeConfigSpec.DoubleValue WALLOW_ROLL_HEIGHT = BUILDER
+            .comment("Height of the axis a rolling animal turns about, in blocks above its feet. A",
+                    "body rolling on the ground turns about its own middle, a radius up; turning it",
+                    "about its feet instead makes it swing like a pendulum, and anything past a",
+                    "quarter turn swings it underground.")
+            .defineInRange("animation.wallowRollHeight", 0.45, 0.0, 2.0);
+
     public static final ForgeConfigSpec.DoubleValue WALLOW_SINK = BUILDER
-            .comment("How far a wallowing animal settles into the mud, in blocks, on top of the roll.",
-                    "A pig in a proper wallow is half buried in it.")
-            .defineInRange("animation.wallowSink", 0.52, 0.0, 0.8);
+            .comment("How far a wallowing animal settles into the mud, in blocks. About a fifth of",
+                    "the animal is the mark: enough to read as being in the wallow rather than on",
+                    "top of it, without burying the pig.")
+            .defineInRange("animation.wallowSink", 0.18, 0.0, 0.8);
 
     // ---------------------------------------------------------------- motherhood
 
