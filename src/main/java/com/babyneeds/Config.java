@@ -362,6 +362,28 @@ public class Config {
                     "shove rather than a real threat, but she will not stand and watch.")
             .define("motherhood.defendBabies", true);
 
+    public static final ForgeConfigSpec.DoubleValue DEFEND_SPEED = BUILDER
+            .comment("Movement multiplier while charging whoever hurt her baby. A cow that ambles",
+                    "over at walking pace is an escort, not a defence: 1.9 is a run.")
+            .defineInRange("motherhood.defendSpeed", 1.9, 0.5, 5.0);
+
+    public static final ForgeConfigSpec.DoubleValue CHARGE_CHANCE = BUILDER
+            .comment("Chance that a landed blow from a defending cow is a full charge rather than a",
+                    "shove: head down, shoulder in, and whoever it hits goes flying.")
+            .defineInRange("motherhood.chargeChance", 0.3, 0.0, 1.0);
+
+    public static final ForgeConfigSpec.DoubleValue CHARGE_KNOCKBACK = BUILDER
+            .comment("How far that charge throws its target.")
+            .defineInRange("motherhood.chargeKnockback", 1.6, 0.0, 10.0);
+
+    public static final ForgeConfigSpec.DoubleValue FEED_NUTRITION_PER_POINT = BUILDER
+            .comment("Nutrition an animal gains per hunger point of food hand-fed to it that is not",
+                    "one of its vanilla breeding items. Feeding is feeding: anything edible feeds it,",
+                    "and food that carries effects gives it those too - a golden apple is a golden",
+                    "apple. What it does NOT do is breed the animal or make it follow you, because",
+                    "that is vanilla's rule and it stays vanilla's rule.")
+            .defineInRange("hunger.feedNutritionPerPoint", 3.0, 0.0, 50.0);
+
     public static final ForgeConfigSpec.DoubleValue DEFEND_RADIUS = BUILDER
             .comment("How far a mother will carry a grudge before she gives up and goes back to grazing.")
             .defineInRange("motherhood.defendRadius", 16.0, 1.0, 64.0);

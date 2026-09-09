@@ -166,10 +166,16 @@ close to decides, once, whether to take it on:
   damage. The answer stands for a few minutes, and the orphan will not pester the same animal again
   in that time, so it wanders off to try its luck elsewhere.
 
-And **a mother goes after whoever hurts her baby**. She is a farm animal, so this is a shove and a
-headbutt rather than a real threat - farm animals have no attack damage in vanilla, so the mod gives
-them some - and she gives it up when the attacker gets far enough away or her temper runs out. She
-never starts anything: she only ever has a target because something hurt her calf.
+And **a mother goes after whoever hurts her baby**, at a run rather than a walk. Farm animals have
+no attack damage in vanilla, so the mod gives them some. A cow is heavy enough that roughly a third
+of her landed blows are a full **charge** - head down, shoulder in, and whoever it hits is thrown
+clear; the rest are shoves. She gives it up when the attacker gets far enough away or her temper runs
+out, and she never starts anything: she only ever has a target because something hurt her calf.
+
+**Feeding is not courting.** Anything edible can be hand-fed to an animal and it counts as a meal -
+nutrition by the food's own value, and its effects carried through, so a golden apple is a golden
+apple whoever eats it. What feeding does *not* do is breed the animal or make it follow you: those
+are vanilla's rules, keyed to vanilla's breeding items, and they stay vanilla's.
 
 ## Carcass yield
 

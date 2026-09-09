@@ -1,5 +1,7 @@
 package com.babyneeds;
 
+import com.mojang.datafixers.util.Pair;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -15,13 +17,14 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.EatBlockGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -458,7 +461,9 @@ public class AnimalEvents {
         if (Config.MOTHERS_DEFEND_BABIES.get()) {
             // No target goal to go with it: she only ever has a target because something hurt her
             // baby, so she is never the one who starts it.
-            animal.goalSelector.addGoal(1, new MeleeAttackGoal(animal, 1.3, true));
+            // Cows are heavy enough to make a charge mean something; the rest just shove.
+            animal.goalSelector.addGoal(1,
+                    new DefendBabyGoal(animal, AnimalState.speciesOf(animal) == Species.COW));
         }
         animal.goalSelector.addGoal(2, new NurseGoal(animal));
 
@@ -522,7 +527,7 @@ public class AnimalEvents {
             return;
         }
 
-        if (animal.isFood(stack)) {
+        if (animal.isFood(stack) || stack.isEdible()) {
             handleFeeding(event, player, animal, stack, stage);
         }
     }
@@ -544,7 +549,7 @@ public class AnimalEvents {
                 || (stack.is(Items.MILK_BUCKET) && Config.ALLOW_BOTTLE_FEEDING.get())
                 || (stack.is(Items.BUCKET) && (animal instanceof Cow || animal instanceof Goat))
                 || (stack.is(Items.SHEARS) && Config.RESTRICT_PRODUCE_TO_ADULTS.get())
-                || animal.isFood(stack);
+                || animal.isFood(stack) || stack.isEdible();
         if (governed) {
             cancel(event);
         }
@@ -553,11 +558,21 @@ public class AnimalEvents {
     /** Hand feeding: a rescue for a hungry animal, never a shortcut past a stage. */
     private static void handleFeeding(PlayerInteractEvent.EntityInteract event, Player player,
                                       Animal animal, ItemStack stack, GrowthStage stage) {
+        boolean breedingItem = animal.isFood(stack);
+
         if (stage == GrowthStage.ADULT) {
-            // Vanilla still handles love mode; nutrition only counts when the food is really eaten.
-            if (animal.canFallInLove()) {
-                feedNutrition(animal, Config.FEED_ITEM_NUTRITION.get());
+            if (breedingItem) {
+                // Vanilla owns breeding and following, and it keeps owning them: this only adds the
+                // nutrition, and only when the food is really eaten.
+                if (animal.canFallInLove()) {
+                    feedNutrition(animal, Config.FEED_ITEM_NUTRITION.get());
+                }
+                return;
             }
+            // Anything else edible is a meal, not a courtship. It feeds and it carries its effects
+            // through - a golden apple is a golden apple - but it will never put an animal in love.
+            cancel(event);
+            eatFromHand(player, animal, stack);
             return;
         }
 
@@ -570,13 +585,47 @@ public class AnimalEvents {
             return;
         }
 
-        if (!player.getAbilities().instabuild) {
-            stack.shrink(1);
-        }
-        double food = Config.FEED_ITEM_NUTRITION.get();
+        double food = breedingItem
+                ? Config.FEED_ITEM_NUTRITION.get()
+                : nutritionOf(stack, animal);
+        consumeFromHand(player, animal, stack);
         feedNutrition(animal, food);
         addGrowth(animal, food, stage);
         eatEffects(animal, ParticleTypes.HAPPY_VILLAGER);
+    }
+
+    /** A meal from the player's hand: nutrition, whatever the food itself does, and nothing else. */
+    private static void eatFromHand(Player player, Animal animal, ItemStack stack) {
+        double food = nutritionOf(stack, animal);
+        consumeFromHand(player, animal, stack);
+        feedNutrition(animal, food);
+        eatEffects(animal, ParticleTypes.HAPPY_VILLAGER);
+    }
+
+    private static void consumeFromHand(Player player, Animal animal, ItemStack stack) {
+        applyFoodEffects(animal, stack);
+        if (!player.getAbilities().instabuild) {
+            stack.shrink(1);
+        }
+    }
+
+    /** Worth what it is worth to a player, so bread beats a potato and a rotten scrap barely counts. */
+    private static double nutritionOf(ItemStack stack, Animal animal) {
+        FoodProperties food = stack.getFoodProperties(animal);
+        int points = food == null ? 1 : food.getNutrition();
+        return points * Config.FEED_NUTRITION_PER_POINT.get();
+    }
+
+    /** A golden apple is a golden apple, whoever eats it. */
+    private static void applyFoodEffects(Animal animal, ItemStack stack) {
+        FoodProperties food = stack.getFoodProperties(animal);
+        if (food == null) return;
+
+        for (Pair<MobEffectInstance, Float> effect : food.getEffects()) {
+            if (effect.getFirst() == null) continue;
+            if (animal.getRandom().nextFloat() >= effect.getSecond()) continue;
+            animal.addEffect(new MobEffectInstance(effect.getFirst()));
+        }
     }
 
     /**
