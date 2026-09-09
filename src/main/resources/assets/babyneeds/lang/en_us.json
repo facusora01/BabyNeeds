@@ -1,0 +1,21 @@
+{
+  "babyneeds.stage.baby": "Baby",
+  "babyneeds.stage.weanling": "Weanling",
+  "babyneeds.stage.juvenile": "Juvenile",
+  "babyneeds.stage.adult": "Adult",
+
+  "babyneeds.status.line": "%s - %s | Nutrition %s | Milk %s",
+  "babyneeds.status.lactating": "  In milk: her babies can nurse.",
+  "babyneeds.status.growth": "  Growth to next stage: %s%%",
+
+  "babyneeds.msg.baby_only_milk": "A newborn can only drink milk.",
+  "babyneeds.msg.too_young_to_milk": "This animal is too young to be milked.",
+  "babyneeds.msg.too_young_to_shear": "This animal is too young to be sheared.",
+  "babyneeds.msg.udder_empty": "There is no milk to spare - she is feeding a baby.",
+
+  "babyneeds.cmd.none_nearby": "No BabyNeeds animals within 8 blocks.",
+  "babyneeds.cmd.stage_set": "Stage set on %s animals.",
+  "babyneeds.cmd.fed": "Fed %s animals.",
+  "babyneeds.cmd.uninstall_on": "Uninstall mode ON. Cleaned %s nearby animals. Visit your farms so their chunks load, then remove the jar.",
+  "babyneeds.cmd.uninstall_off": "Uninstall mode OFF. Animals grow through stages again."
+}
