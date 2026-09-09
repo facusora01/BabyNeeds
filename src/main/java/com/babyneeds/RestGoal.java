@@ -6,7 +6,6 @@ import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.phys.Vec3;
@@ -98,40 +97,12 @@ public class RestGoal extends Goal {
         AnimalState.setPoseTicks(animal, POSE_REFRESH_TICKS);
 
         if (chosenPose == PigPose.WALLOWING) {
-            // Not pinned: a roll travels, and pinning it is what would turn the roll back into a
-            // pig spinning on the spot. It still cannot walk - the pose goal holds that - it just
-            // goes where its own rolling takes it, and gets up wherever that leaves it.
-            animal.getNavigation().stop();
-            rollSideways();
+            // Deliberately not pinned to the spot: rolling travels, and the pose goal is what
+            // carries it - see HoldPoseGoal. Pinning it here would undo that.
             wallow();
         } else {
             AnimalEvents.holdStill(animal, restingSpot);
         }
-    }
-
-    /**
-     * Turning over and travelling with it. The distance comes from the turn rather than being chosen
-     * separately, so the animal covers exactly what a body of its size would cover rolling on the
-     * ground - and moving it through {@code move} rather than by setting its position means a fence
-     * or a wall stops the roll where a real one would stop.
-     */
-    private void rollSideways() {
-        long gameTime = animal.level().getGameTime();
-        long start = AnimalState.poseStart(animal);
-        double speed = Config.WALLOW_ROLL_SPEED.get();
-        double amplitude = Config.WALLOW_ROLL_ANGLE.get();
-
-        double now = WallowRoll.angle(WallowRoll.phase(gameTime, 0.0, start, speed), amplitude);
-        double before = WallowRoll.angle(WallowRoll.phase(gameTime - 1, 0.0, start, speed), amplitude);
-        double step = WallowRoll.travel(now - before, Config.WALLOW_ROLL_RADIUS.get());
-        if (Math.abs(step) < 1.0E-5) return;
-
-        // Sideways means sideways to the animal, so it rolls across its own flank rather than in
-        // some fixed compass direction.
-        double yaw = Math.toRadians(animal.getYRot());
-        double rightX = Math.cos(yaw);
-        double rightZ = Math.sin(yaw);
-        animal.move(MoverType.SELF, new Vec3(rightX * step, 0.0, rightZ * step));
     }
 
     /** Rocking in the mud: it coats the animal, and it throws mud around while it happens. */
