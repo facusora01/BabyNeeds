@@ -344,12 +344,13 @@ public class AnimalEvents {
         if (!(event.getEntity() instanceof Animal animal) || !AnimalState.isSupported(animal)) return;
         if (!AnimalState.isInitialized(animal)) return;
 
-        boolean starved = event.getSource().is(DamageTypes.STARVE);
-        double multiplier = LootCalculator.dropMultiplier(
+        double multiplier = LootCalculator.carcassYield(
+                AnimalState.stage(animal),
                 AnimalState.nutrition(animal),
-                starved,
+                event.getSource().is(DamageTypes.STARVE),
                 Config.FULL_CONDITION_NUTRITION.get(),
-                Config.STARVED_DROP_MULTIPLIER.get());
+                Config.STARVED_DROP_MULTIPLIER.get(),
+                Config.JUVENILE_YIELD.get());
         if (multiplier >= 1.0) return;
 
         Iterator<ItemEntity> drops = event.getDrops().iterator();

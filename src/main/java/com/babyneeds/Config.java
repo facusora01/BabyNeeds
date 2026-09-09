@@ -210,6 +210,14 @@ public class Config {
                     "already a loss before anything actually dies of hunger.")
             .defineInRange("loot.fullConditionNutrition", 50.0, 0.0, 100.0);
 
+    public static final ForgeConfigSpec.DoubleValue JUVENILE_YIELD = BUILDER
+            .comment("What an adolescent carcass yields against a full grown one. 0.45 = a bit under",
+                    "half. An adolescent is a smaller animal; without this it dropped exactly as much",
+                    "as an adult and the optimal play was to slaughter everything one stage early.",
+                    "This multiplies with condition, so a half-grown animal that starved is the worst",
+                    "of both. Babies and weanlings drop nothing at all (vanilla's own rule).")
+            .defineInRange("loot.juvenileYield", 0.45, 0.0, 1.0);
+
     // ---------------------------------------------------------------- misc
 
     public static final ForgeConfigSpec.BooleanValue SHOW_STATUS_ON_SNEAK = BUILDER

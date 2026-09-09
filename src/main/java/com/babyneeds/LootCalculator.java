@@ -30,6 +30,34 @@ public final class LootCalculator {
     }
 
     /**
+     * Yield for the body the animal is actually carrying. An adolescent is a smaller animal and
+     * gives a smaller carcass, which is what stops the obvious exploit: without it a juvenile
+     * dropped exactly as much meat and hide as a full adult, so the optimal play was to slaughter
+     * everything one stage early and never raise anything to adult except a pair of breeders - and
+     * the fourth stage became decoration.
+     *
+     * Babies and weanlings are zero because vanilla suppresses loot for anything it considers a
+     * baby; killing calves is deliberately not a business.
+     */
+    public static double stageYield(GrowthStage stage, double juvenileYield) {
+        return switch (stage) {
+            case BABY, WEANLING -> 0.0;
+            case JUVENILE -> clamp01(juvenileYield);
+            case ADULT -> 1.0;
+        };
+    }
+
+    /**
+     * The whole carcass in one number: how big the animal was, times what condition it died in. A
+     * half-grown animal that starved to death is the worst of both.
+     */
+    public static double carcassYield(GrowthStage stage, double nutrition, boolean starved,
+                                      double threshold, double minMultiplier, double juvenileYield) {
+        return stageYield(stage, juvenileYield)
+                * dropMultiplier(nutrition, starved, threshold, minMultiplier);
+    }
+
+    /**
      * Scales a stack down. The fractional part is settled by a roll rather than rounded, so a
      * single hide at 0.35 condition becomes a 35% chance of a hide instead of always one or always
      * none - across a herd the average comes out right, and no single kill feels arbitrary.

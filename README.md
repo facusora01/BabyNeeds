@@ -78,7 +78,19 @@ instead of a single piglet - about 8% of births, and the bigger the litter the r
 same udder, so a big litter on a thin sow is a real problem rather than free pork. Without mud
 anywhere near her, a sow throws one piglet like everything else.
 
-## Carcass condition
+## Carcass yield
+
+What a carcass gives is **how big the animal was, times what condition it died in**.
+
+| Stage | Yield |
+|---|---|
+| Baby, Weanling | nothing at all - vanilla suppresses loot for babies, and killing calves is deliberately not a business |
+| Juvenile | 45% of an adult: it is a smaller animal |
+| Adult | full |
+
+Without the adolescent penalty the fourth stage is decoration - a juvenile dropped exactly as much
+meat and hide as an adult, so the optimal play was to slaughter everything one stage early and keep
+only a pair of breeders.
 
 An animal that starved to death is skin and bone, and drops accordingly: a quarter of its normal
 meat and hide by default. The same scale runs on animals butchered while underfed, sliding from a
@@ -108,6 +120,7 @@ All require permission level 2, and act on animals within 8 blocks:
 - `/babyneeds info` - stage, nutrition and milk of the animals around you
 - `/babyneeds stage <baby|weanling|juvenile|adult>` - force a stage (balance testing)
 - `/babyneeds feed` - top up nutrition, and milk for mothers in lactation
+- `/babyneeds drain` - empty nutrition and push straight to starving (testing the failure path)
 - `/babyneeds uninstall` / `/babyneeds uninstall cancel` - strip BabyNeeds data and return animals
   to vanilla ages before removing the jar
 
@@ -127,6 +140,7 @@ default implies in real minutes. The headline knobs:
 - `pasture.recoveryGraceTicks` - how long bare ground is safe before it can ever be lost
 - `pasture.trampleThreshold` / `pasture.compactMaxChance` - how much traffic ruins soil, and how fast
 - `pig.mudLitterChance` / `pig.maxLitterSize` - the mud wallow payoff
+- `loot.juvenileYield` - how much less an adolescent carcass is worth than a grown one
 - `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal
 

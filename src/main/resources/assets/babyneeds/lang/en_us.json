@@ -15,6 +15,7 @@
 
   "babyneeds.cmd.none_nearby": "No BabyNeeds animals within 8 blocks.",
   "babyneeds.cmd.stage_set": "Stage set on %s animals.",
+  "babyneeds.cmd.drained": "Drained %s animals to zero nutrition.",
   "babyneeds.cmd.fed": "Fed %s animals.",
   "babyneeds.cmd.uninstall_on": "Uninstall mode ON. Cleaned %s nearby animals. Visit your farms so their chunks load, then remove the jar.",
   "babyneeds.cmd.uninstall_off": "Uninstall mode OFF. Animals grow through stages again."

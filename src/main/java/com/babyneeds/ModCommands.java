@@ -47,6 +47,13 @@ public class ModCommands {
                                         LactationCalculator.capacity(AnimalState.dependents(animal)));
                             }
                         }, "babyneeds.cmd.fed")))
+                        // Test tooling: starvation otherwise takes the better part of an hour to
+                        // reach, which makes the whole failure path impractical to check by hand.
+                        .then(Commands.literal("drain").executes(ctx -> forEachNearby(ctx.getSource(), animal -> {
+                            AnimalState.setNutrition(animal, 0.0);
+                            AnimalState.setMilk(animal, 0.0);
+                            AnimalState.setStarvingTicks(animal, Config.STARVATION_GRACE_TICKS.get());
+                        }, "babyneeds.cmd.drained")))
                         .then(Commands.literal("uninstall")
                                 .executes(ctx -> setUninstall(ctx.getSource(), true))
                                 .then(Commands.literal("cancel")
