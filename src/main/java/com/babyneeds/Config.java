@@ -330,25 +330,25 @@ public class Config {
     public static final ForgeConfigSpec.DoubleValue SIT_HEAD_PITCH = BUILDER
             .comment("Extra pitch on the head while sitting, in radians, on top of wherever the animal",
                     "is already looking. Negative lifts the snout.")
-            .defineInRange("animation.sitHeadPitch", 0.0, -1.5, 1.5);
+            .defineInRange("animation.sitHeadPitch", 0.15, -1.5, 1.5);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HEAD_SHIFT = BUILDER
             .comment("How far the head slides forwards (negative) or backwards (positive).")
-            .defineInRange("animation.sitHeadShift", 0.0, -8.0, 8.0);
+            .defineInRange("animation.sitHeadShift", 1.3, -8.0, 8.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_FRONT_FOLD = BUILDER
             .comment("Rotation of the front legs, in radians. Zero leaves them straight and planted,",
                     "which is usually what holds the chest up; a little positive leans them back under",
                     "a pig that is sitting well onto its rump.")
-            .defineInRange("animation.sitFrontFold", 0.0, -2.0, 2.0);
+            .defineInRange("animation.sitFrontFold", -0.25, -2.0, 2.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_FRONT_DROP = BUILDER
             .comment("How far the front leg pivots move down.")
-            .defineInRange("animation.sitFrontDrop", 0.0, -8.0, 8.0);
+            .defineInRange("animation.sitFrontDrop", -0.3, -8.0, 8.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_FRONT_SHIFT = BUILDER
             .comment("How far the front legs slide forwards (negative) or backwards (positive).")
-            .defineInRange("animation.sitFrontShift", 0.0, -8.0, 8.0);
+            .defineInRange("animation.sitFrontShift", 0.3, -8.0, 8.0);
 
     // ---------------------------------------------------------------- motherhood
 
@@ -448,14 +448,14 @@ public class Config {
                     "the chest, which is what sitting is. The default of -0.38 is asin(6/16): the",
                     "rump has six units to fall to reach the ground, over the sixteen between the",
                     "chest and the tail.")
-            .defineInRange("animation.sitTilt", -0.75, -1.5, 1.5);
+            .defineInRange("animation.sitTilt", -0.73, -1.5, 1.5);
 
     public static final ForgeConfigSpec.DoubleValue SIT_ANCHOR_FORWARD = BUILDER
             .comment("How far forward of the body's pivot the point that holds still sits. A pig sits",
                     "by pivoting about its chest, not its neck - and the body's own pivot is up at",
                     "neck height, which is why rotating it alone drives the snout into the ground.",
                     "10 puts this at the front of the trunk, above the front legs.")
-            .defineInRange("animation.sitAnchorForward", 4.5, 0.0, 24.0);
+            .defineInRange("animation.sitAnchorForward", 5.5, 0.0, 24.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_ANCHOR_BELOW = BUILDER
             .comment("How far below the pivot that same point sits. 7 puts it at the underside of the",
@@ -467,7 +467,7 @@ public class Config {
             .comment("How far the head follows the chest. The head is a sibling of the body rather",
                     "than a child, so it holds still on its own; with the chest anchored it should",
                     "barely need to move at all.")
-            .defineInRange("animation.sitHeadDrop", 0.8, -8.0, 8.0);
+            .defineInRange("animation.sitHeadDrop", 0.3, -8.0, 8.0);
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_FOLD = BUILDER
             .comment("Rotation of the hind legs, in radians. Negative swings the trotters forwards",
@@ -483,7 +483,7 @@ public class Config {
 
     public static final ForgeConfigSpec.DoubleValue SIT_HIND_SHIFT = BUILDER
             .comment("How far the hind legs slide forwards (negative) or backwards (positive).")
-            .defineInRange("animation.sitHindShift", -5.0, -8.0, 8.0);
+            .defineInRange("animation.sitHindShift", -3.8, -8.0, 8.0);
 
     // ---------------------------------------------------------------- misc
 
