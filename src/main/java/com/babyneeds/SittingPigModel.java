@@ -21,25 +21,11 @@ import net.minecraft.world.entity.animal.Pig;
  */
 public class SittingPigModel<T extends Pig> extends PigModel<T> {
 
-    // The tuning knobs. Model space has +y pointing DOWN and +z pointing BACKWARDS, and the trunk
-    // already sits at xRot = 90 degrees, which is what lays it flat along the animal.
-    //
-    // The sign of the tilt is the one that bit: rotating the trunk further past 90 lifts the rear
-    // and drops the chest, which is a pig doing a handstand, not a pig sitting down. Working the
-    // rotation out on the rear-bottom corner (local y=6, z=1) settles it - a positive delta moves
-    // that corner upwards - so a sit needs a NEGATIVE tilt.
-    /** How far the trunk sinks as the rump goes down. */
-    private static final float BODY_DROP = 1.5f;
-    /** How far back it slides while it does. */
-    private static final float BODY_SHIFT = 0.5f;
-    /** Tilt of the trunk. Negative drops the rear and lifts the chest, which is what sitting is. */
-    private static final float BODY_TILT = -0.42f;
-    /** How far the head follows the chest. The chest goes up, so the head barely moves at all. */
-    private static final float HEAD_DROP = 0.5f;
-    /** Hind legs folded forward under the body: negative swings the feet towards the front. */
-    private static final float HIND_LEG_FOLD = -1.0f;
-    private static final float HIND_LEG_DROP = 1.5f;
-    private static final float HIND_LEG_SHIFT = -1.0f;
+    /**
+     * The trunk's resting rotation: 90 degrees is what lays it flat along the animal, and the sit is
+     * measured from there.
+     */
+    private static final float FLAT = (float) Math.PI / 2.0f;
 
     private final float restBodyY;
     private final float restBodyZ;
@@ -76,23 +62,31 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         float sit = sitProgress(entity);
         if (sit <= 0.0f) return;
 
-        // The rump goes down and the trunk tips back with it.
-        body.y = restBodyY + BODY_DROP * sit;
-        body.z = restBodyZ + BODY_SHIFT * sit;
-        // Absolute rather than additive, so the pose never depends on what was left behind.
-        body.xRot = ((float) Math.PI / 2.0f) + BODY_TILT * sit;
+        // Every number below is read live from the config rather than compiled in. A pose is art:
+        // it cannot be derived, only looked at, and working the tilt out on paper got its sign wrong
+        // twice. This way the file can be edited with the game running and the pig changes shape
+        // under you until it looks right.
+
+        // The rump goes down and the trunk tips with it. Absolute rather than additive, so the pose
+        // never depends on what was left behind by the frame before.
+        body.y = restBodyY + Config.SIT_BODY_DROP.get().floatValue() * sit;
+        body.z = restBodyZ + Config.SIT_BODY_SHIFT.get().floatValue() * sit;
+        body.xRot = FLAT + Config.SIT_BODY_TILT.get().floatValue() * sit;
 
         // The head keeps its own pitch - it is a sibling of the body, not a child, so it goes on
         // looking wherever the pig is looking instead of being swung skywards with the chest.
-        head.y = restHeadY + HEAD_DROP * sit;
+        head.y = restHeadY + Config.SIT_HEAD_DROP.get().floatValue() * sit;
 
-        // Hind legs fold forward under the animal; the front pair stays planted exactly as it is.
-        rightHindLeg.xRot = HIND_LEG_FOLD * sit;
-        leftHindLeg.xRot = HIND_LEG_FOLD * sit;
-        rightHindLeg.y = restHindY + HIND_LEG_DROP * sit;
-        leftHindLeg.y = restHindY + HIND_LEG_DROP * sit;
-        rightHindLeg.z = restHindZ + HIND_LEG_SHIFT * sit;
-        leftHindLeg.z = restHindZ + HIND_LEG_SHIFT * sit;
+        // Hind legs fold under the animal; the front pair stays planted exactly as it is.
+        float fold = Config.SIT_HIND_FOLD.get().floatValue() * sit;
+        float drop = Config.SIT_HIND_DROP.get().floatValue() * sit;
+        float shift = Config.SIT_HIND_SHIFT.get().floatValue() * sit;
+        rightHindLeg.xRot = fold;
+        leftHindLeg.xRot = fold;
+        rightHindLeg.y = restHindY + drop;
+        leftHindLeg.y = restHindY + drop;
+        rightHindLeg.z = restHindZ + shift;
+        leftHindLeg.z = restHindZ + shift;
     }
 
     /** 0 standing, 1 fully sat, eased - the same value the rest of the mod's animation runs on. */

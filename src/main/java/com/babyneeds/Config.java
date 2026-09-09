@@ -413,6 +413,47 @@ public class Config {
             .comment("Ticks she stays angry after the last time her baby was hurt (200 = ten seconds).")
             .defineInRange("motherhood.defendTicks", 200, 20, 100000);
 
+    // ---------------------------------------------------------------- animation tuning
+
+    // A sitting pig is posed part by part, and the numbers that describe that pose are art, not
+    // logic: they cannot be derived, only looked at. Deriving the tilt on paper got its sign wrong
+    // twice, so they live here instead of being compiled in - edit the file, and the pose changes
+    // under you without a restart.
+    //
+    // Model space has +y pointing DOWN and +z pointing BACKWARDS, and the trunk already sits at 90
+    // degrees, which is what lays it flat along the animal.
+
+    public static final ForgeConfigSpec.DoubleValue SIT_BODY_TILT = BUILDER
+            .comment("Tilt added to the trunk when sitting, in radians. This is the one that decides",
+                    "whether the rump goes down or the chest does - if the pig looks like it is doing",
+                    "a handstand, flip the sign.")
+            .defineInRange("animation.sitBodyTilt", 0.35, -1.5, 1.5);
+
+    public static final ForgeConfigSpec.DoubleValue SIT_BODY_DROP = BUILDER
+            .comment("How far the trunk sinks, in model units (16 to a block).")
+            .defineInRange("animation.sitBodyDrop", 1.5, -8.0, 8.0);
+
+    public static final ForgeConfigSpec.DoubleValue SIT_BODY_SHIFT = BUILDER
+            .comment("How far the trunk slides backwards as it settles.")
+            .defineInRange("animation.sitBodyShift", 0.5, -8.0, 8.0);
+
+    public static final ForgeConfigSpec.DoubleValue SIT_HEAD_DROP = BUILDER
+            .comment("How far the head follows the chest. The head is a sibling of the body rather",
+                    "than a child, so it has to be moved on its own or it floats free of the neck.")
+            .defineInRange("animation.sitHeadDrop", 0.5, -8.0, 8.0);
+
+    public static final ForgeConfigSpec.DoubleValue SIT_HIND_FOLD = BUILDER
+            .comment("Rotation of the hind legs, in radians, folding them under the animal.")
+            .defineInRange("animation.sitHindFold", 0.9, -2.0, 2.0);
+
+    public static final ForgeConfigSpec.DoubleValue SIT_HIND_DROP = BUILDER
+            .comment("How far the hind legs move down to meet the ground.")
+            .defineInRange("animation.sitHindDrop", 1.5, -8.0, 8.0);
+
+    public static final ForgeConfigSpec.DoubleValue SIT_HIND_SHIFT = BUILDER
+            .comment("How far the hind legs slide forwards (negative) or backwards (positive).")
+            .defineInRange("animation.sitHindShift", -1.0, -8.0, 8.0);
+
     // ---------------------------------------------------------------- misc
 
     public static final ForgeConfigSpec.BooleanValue SHOW_STATUS_ON_SNEAK = BUILDER
