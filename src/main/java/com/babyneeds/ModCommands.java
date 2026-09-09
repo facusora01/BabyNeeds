@@ -34,11 +34,23 @@ public class ModCommands {
             }, "babyneeds.cmd.stage_set")));
         }
 
+        var poseCommand = Commands.literal("pose");
+        for (PigPose value : PigPose.values()) {
+            poseCommand = poseCommand.then(Commands.literal(value.name().toLowerCase(java.util.Locale.ROOT))
+                    .executes(ctx -> forEachNearby(ctx.getSource(), animal -> {
+                        AnimalState.setHeadDownTicks(animal, value == PigPose.HEAD_DOWN ? 200 : 0);
+                        AnimalEvents.setPose(animal, value);
+                    }, "babyneeds.cmd.pose_set")));
+        }
+
         event.getDispatcher().register(
                 Commands.literal("babyneeds")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("info").executes(ctx -> info(ctx.getSource())))
                         .then(stage)
+                        // Poses happen on their own schedule, which is no way to look at one: this
+                        // forces it so an animation can be judged in a second rather than a minute.
+                        .then(poseCommand)
                         .then(Commands.literal("feed").executes(ctx -> forEachNearby(ctx.getSource(), animal -> {
                             AnimalState.setNutrition(animal, HungerCalculator.MAX_NUTRITION);
                             AnimalState.setStarvingTicks(animal, 0);

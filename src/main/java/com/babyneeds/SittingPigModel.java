@@ -21,18 +21,24 @@ import net.minecraft.world.entity.animal.Pig;
  */
 public class SittingPigModel<T extends Pig> extends PigModel<T> {
 
-    // The five tuning knobs. Model space has +y pointing DOWN and +z pointing backwards.
+    // The tuning knobs. Model space has +y pointing DOWN and +z pointing BACKWARDS, and the trunk
+    // already sits at xRot = 90 degrees, which is what lays it flat along the animal.
+    //
+    // The sign of the tilt is the one that bit: rotating the trunk further past 90 lifts the rear
+    // and drops the chest, which is a pig doing a handstand, not a pig sitting down. Working the
+    // rotation out on the rear-bottom corner (local y=6, z=1) settles it - a positive delta moves
+    // that corner upwards - so a sit needs a NEGATIVE tilt.
     /** How far the trunk sinks as the rump goes down. */
-    private static final float BODY_DROP = 2.0f;
+    private static final float BODY_DROP = 1.5f;
     /** How far back it slides while it does. */
-    private static final float BODY_SHIFT = 1.0f;
-    /** Tilt of the trunk: rear down, chest up. Flip the sign to tip it the other way. */
-    private static final float BODY_TILT = 0.5f;
-    /** How far the head follows the chest down. The chest barely moves, so neither does it. */
-    private static final float HEAD_DROP = 1.0f;
-    /** Hind legs folded forward under the body, and dropped to meet the ground. */
-    private static final float HIND_LEG_FOLD = -1.35f;
-    private static final float HIND_LEG_DROP = 3.0f;
+    private static final float BODY_SHIFT = 0.5f;
+    /** Tilt of the trunk. Negative drops the rear and lifts the chest, which is what sitting is. */
+    private static final float BODY_TILT = -0.42f;
+    /** How far the head follows the chest. The chest goes up, so the head barely moves at all. */
+    private static final float HEAD_DROP = 0.5f;
+    /** Hind legs folded forward under the body: negative swings the feet towards the front. */
+    private static final float HIND_LEG_FOLD = -1.0f;
+    private static final float HIND_LEG_DROP = 1.5f;
     private static final float HIND_LEG_SHIFT = -1.0f;
 
     private final float restBodyY;
@@ -73,7 +79,8 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         // The rump goes down and the trunk tips back with it.
         body.y = restBodyY + BODY_DROP * sit;
         body.z = restBodyZ + BODY_SHIFT * sit;
-        body.xRot += BODY_TILT * sit;
+        // Absolute rather than additive, so the pose never depends on what was left behind.
+        body.xRot = ((float) Math.PI / 2.0f) + BODY_TILT * sit;
 
         // The head keeps its own pitch - it is a sibling of the body, not a child, so it goes on
         // looking wherever the pig is looking instead of being swung skywards with the chest.

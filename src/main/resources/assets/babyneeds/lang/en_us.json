@@ -19,5 +19,6 @@
   "babyneeds.cmd.drained": "Drained %s animals to zero nutrition.",
   "babyneeds.cmd.fed": "Fed %s animals.",
   "babyneeds.cmd.uninstall_on": "Uninstall mode ON. Cleaned %s nearby animals. Visit your farms so their chunks load, then remove the jar.",
-  "babyneeds.cmd.uninstall_off": "Uninstall mode OFF. Animals grow through stages again."
+  "babyneeds.cmd.uninstall_off": "Uninstall mode OFF. Animals grow through stages again.",
+  "babyneeds.cmd.pose_set": "Pose set on %s animals."
 }
