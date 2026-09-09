@@ -3,6 +3,7 @@ package com.babyneeds;
 import java.util.List;
 import java.util.UUID;
 
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
@@ -11,6 +12,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -125,6 +127,26 @@ public final class Motherhood {
         baby.hurtMarked = true;
 
         foster.playSound(SoundEvents.GOAT_RAM_IMPACT, 0.9f, 1.2f);
+    }
+
+    /**
+     * Makes a landed blow visible. A cow has no attack animation of any kind, so a successful hit
+     * shows up as nothing but the damage - and against a creative-mode player, who takes none, as
+     * nothing at all. That is indistinguishable from a broken mod, so the blow gets a sound and a
+     * puff of its own.
+     */
+    @SubscribeEvent
+    static void onDefenderAttacks(LivingAttackEvent event) {
+        if (!Config.MOTHERS_DEFEND_BABIES.get()) return;
+        if (!(event.getSource().getEntity() instanceof Animal attacker)) return;
+        if (!AnimalState.isSupported(attacker) || AnimalState.defendTicks(attacker) <= 0) return;
+
+        attacker.playSound(SoundEvents.GOAT_RAM_IMPACT, 0.7f, 1.3f);
+        if (attacker.level() instanceof ServerLevel server) {
+            LivingEntity victim = event.getEntity();
+            server.sendParticles(ParticleTypes.CRIT,
+                    victim.getX(), victim.getY(0.7), victim.getZ(), 6, 0.25, 0.25, 0.25, 0.05);
+        }
     }
 
     // ------------------------------------------------------------------ defence
