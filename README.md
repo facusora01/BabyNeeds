@@ -182,10 +182,13 @@ version out of brain behaviours, which cows do not have, so this is the same sha
 She gives it all up when the attacker gets far enough away or her temper runs out, and she never
 starts anything: she only ever has a target because something hurt her calf.
 
-**Feeding is not courting.** Anything edible can be hand-fed to an animal and it counts as a meal -
-nutrition by the food's own value, and its effects carried through, so a golden apple is a golden
-apple whoever eats it. What feeding does *not* do is breed the animal or make it follow you: those
-are vanilla's rules, keyed to vanilla's breeding items, and they stay vanilla's.
+**Feeding is not courting.** A pig - the mod's one omnivore - will take anything edible from your
+hand and it counts as a meal: nutrition by the food's own value, and its effects carried through, so
+a golden apple is a golden apple. Cows, sheep and goats are herbivores and keep vanilla's diet
+exactly: wheat and nothing else.
+
+What feeding never does, for any of them, is breed the animal or make it follow you. Those are
+vanilla's rules, keyed to vanilla's breeding items, and they stay vanilla's.
 
 ## Carcass yield
 

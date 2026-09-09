@@ -530,7 +530,7 @@ public class AnimalEvents {
             return;
         }
 
-        if (animal.isFood(stack) || stack.isEdible()) {
+        if (animal.isFood(stack) || (isOmnivore(animal) && stack.isEdible())) {
             handleFeeding(event, player, animal, stack, stage);
         }
     }
@@ -552,7 +552,7 @@ public class AnimalEvents {
                 || (stack.is(Items.MILK_BUCKET) && Config.ALLOW_BOTTLE_FEEDING.get())
                 || (stack.is(Items.BUCKET) && (animal instanceof Cow || animal instanceof Goat))
                 || (stack.is(Items.SHEARS) && Config.RESTRICT_PRODUCE_TO_ADULTS.get())
-                || animal.isFood(stack) || stack.isEdible();
+                || animal.isFood(stack) || (isOmnivore(animal) && stack.isEdible());
         if (governed) {
             cancel(event);
         }
@@ -572,8 +572,9 @@ public class AnimalEvents {
                 }
                 return;
             }
-            // Anything else edible is a meal, not a courtship. It feeds and it carries its effects
-            // through - a golden apple is a golden apple - but it will never put an animal in love.
+            // For an omnivore, anything else edible is a meal rather than a courtship. It feeds
+            // and it carries its effects through - a golden apple is a golden apple - but it will
+            // never put an animal in love. A herbivore never gets here at all.
             cancel(event);
             eatFromHand(player, animal, stack);
             return;
@@ -595,6 +596,12 @@ public class AnimalEvents {
         feedNutrition(animal, food);
         addGrowth(animal, food, stage);
         eatEffects(animal, ParticleTypes.HAPPY_VILLAGER);
+    }
+
+    /** Only the pig eats off-menu; everything else keeps vanilla's diet exactly. */
+    private static boolean isOmnivore(Animal animal) {
+        Species species = AnimalState.speciesOf(animal);
+        return species != null && species.omnivore();
     }
 
     /** A meal from the player's hand: nutrition, whatever the food itself does, and nothing else. */
