@@ -35,9 +35,7 @@ import net.minecraft.world.entity.animal.Pig;
  */
 public class SittingPigModel<T extends Pig> extends PigModel<T> {
 
-    /** The trunk's resting rotation. 90 degrees is what lays it flat along the animal. */
-    private static final float FLAT = (float) Math.PI / 2.0f;
-
+    private final float restBodyXRot;
     private final float restBodyY;
     private final float restBodyZ;
     private final float restHeadY;
@@ -51,6 +49,7 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         super(root);
         // setupAnim rewrites rotations every frame but never offsets, so the resting ones have to be
         // remembered here and put back by hand.
+        this.restBodyXRot = body.xRot;
         this.restBodyY = body.y;
         this.restBodyZ = body.z;
         this.restHeadY = head.y;
@@ -74,9 +73,16 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
 
     /**
      * One model instance draws every pig on screen, so the standing pose has to be put back before
-     * the next animal is posed - otherwise one pig sitting sits the whole herd.
+     * the next animal is posed - otherwise one pig sitting sits the whole herd, which is exactly
+     * what happened while this method only put back the offsets.
+     *
+     * The rotations need it too, and only some of them: {@code setupAnim} rewrites the head and all
+     * four legs every frame, so those clean themselves, but it never touches the body. The trunk's
+     * ninety degrees is baked into the part when the model is built and never written again - so a
+     * tilt left on it by the last pig drawn is inherited by every pig after it.
      */
     private void restoreStandingPose() {
+        body.xRot = restBodyXRot;
         body.y = restBodyY;
         body.z = restBodyZ;
         head.y = restHeadY;
@@ -105,7 +111,7 @@ public class SittingPigModel<T extends Pig> extends PigModel<T> {
         float carriedY = anchorY * cos - anchorZ * sin;
         float carriedZ = anchorY * sin + anchorZ * cos;
 
-        body.xRot = FLAT + tilt;
+        body.xRot = restBodyXRot + tilt;
         body.y = restBodyY + (anchorY - carriedY);
         body.z = restBodyZ + (anchorZ - carriedZ);
 
