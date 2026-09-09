@@ -105,8 +105,15 @@ throws one piglet like everything else.
 Water dug into mud **silts up and turns brown** on its own, and runs clear again if the mud around it
 is taken away. Water colour in Minecraft comes from the biome and is resolved per position by the
 client, so a brown puddle beside clean blue water cannot be a block - it is its own fluid, tinted
-from vanilla's water textures and tagged as water so swimming, drowning, hydration and putting out
-fires all behave normally. It comes with a bucket.
+from vanilla's water textures. Every one of its properties mirrors how Forge defines vanilla water,
+deliberately: infinite sources, extinguishing fire, breaking your fall, hydrating farmland, carrying
+boats, and the water tag so anything that asks "is this water?" says yes. A fluid that looks like
+water but does not behave like it is a trap, not a feature - players will treat it as water, because
+it is water, just dirty.
+
+Two things are its own: it creeps rather than flows, and it **drags**. Wading through a wallow costs
+you about a third of your speed (`pig.muddyWaterDrag`), which is what makes it read as mud rather
+than as brown water. It comes with a bucket.
 
 ## Carcass yield
 

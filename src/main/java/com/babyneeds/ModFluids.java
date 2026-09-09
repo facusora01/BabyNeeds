@@ -2,10 +2,17 @@ package com.babyneeds;
 
 import java.util.function.Consumer;
 
+import javax.annotation.Nullable;
+
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.common.SoundActions;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -21,8 +28,14 @@ import net.minecraftforge.registries.RegistryObject;
  * something a block can ask for - it has to be its own fluid. This one reuses vanilla's water
  * textures and simply tints them, so it costs no artwork and still reads as water.
  *
- * It is tagged as water (see the fluid tag in data/) so swimming, drowning, farmland hydration and
- * putting out fires all behave exactly as players expect.
+ * Every property below mirrors how Forge defines vanilla water, deliberately and one for one. A
+ * fluid that looks like water but does not make infinite sources, put out fires or break your fall
+ * is a trap for the player, not a feature: they will treat it as water, because it is water, just
+ * dirty. The only differences are the tint, a slower flow, and the drag that {@link MuddyWaterBlock}
+ * adds - wading through a wallow should feel like wading through a wallow.
+ *
+ * It is also in the {@code minecraft:water} fluid tag, so everything that asks "is this water?" by
+ * tag - swimming, drowning, farmland hydration - says yes.
  */
 public class ModFluids {
 
@@ -37,15 +50,23 @@ public class ModFluids {
     public static final RegistryObject<FluidType> MUDDY_WATER_TYPE = FLUID_TYPES.register("muddy_water",
             () -> new FluidType(FluidType.Properties.create()
                     .descriptionId("fluid.babyneeds.muddy_water")
-                    .canSwim(true)
-                    .canDrown(true)
-                    .canPushEntity(true)
-                    .canHydrate(true)
+                    .fallDistanceModifier(0.0f)
+                    .canExtinguish(true)
+                    .canConvertToSource(true)
                     .supportsBoating(true)
-                    .density(1100)
-                    .viscosity(1100)
+                    .canHydrate(true)
                     .sound(SoundActions.BUCKET_FILL, SoundEvents.BUCKET_FILL)
-                    .sound(SoundActions.BUCKET_EMPTY, SoundEvents.BUCKET_EMPTY)) {
+                    .sound(SoundActions.BUCKET_EMPTY, SoundEvents.BUCKET_EMPTY)
+                    .sound(SoundActions.FLUID_VAPORIZE, SoundEvents.FIRE_EXTINGUISH)) {
+
+                @Override
+                @Nullable
+                public BlockPathTypes getBlockPathType(FluidState state, BlockGetter level, BlockPos pos,
+                                                       @Nullable Mob mob, boolean canFluidLog) {
+                    // Exactly what Forge does for vanilla water: defer to vanilla pathfinding, so
+                    // mobs wade and swim through a wallow the same way they do through a pond.
+                    return canFluidLog ? super.getBlockPathType(state, level, pos, mob, true) : null;
+                }
 
                 @Override
                 public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
@@ -84,7 +105,8 @@ public class ModFluids {
                 .bucket(ModItems.MUDDY_WATER_BUCKET)
                 .slopeFindDistance(4)
                 .levelDecreasePerBlock(1)
-                .tickRate(5);
+                // Water ticks every 5; silt is heavier and creeps rather than runs.
+                .tickRate(10);
     }
 
     public static void register(IEventBus modEventBus) {

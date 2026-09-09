@@ -223,6 +223,12 @@ public class Config {
                     "from plain mud either way.")
             .define("pig.muddyWater", true);
 
+    public static final ForgeConfigSpec.DoubleValue MUDDY_WATER_DRAG = BUILDER
+            .comment("How much muddy water slows whatever wades through it, as a fraction of normal",
+                    "speed (0.65 = a third slower). Mud is thick and crossing a wallow should cost",
+                    "something. 1.0 turns the drag off and leaves it behaving exactly like water.")
+            .defineInRange("pig.muddyWaterDrag", 0.65, 0.1, 1.0);
+
     public static final ForgeConfigSpec.DoubleValue MUD_LITTER_CHANCE = BUILDER
             .comment("Chance that a sow with access to a mud wallow farrows a litter instead of a",
                     "single piglet. 0.08 = 8%. This is the payoff for building a pig pen with mud in",
