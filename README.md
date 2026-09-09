@@ -55,8 +55,9 @@ alone so normal breeding cooldowns still work.
 
 ## Pasture and rotation
 
-Animals graze for themselves. Loose grass and ferns are eaten whole and cost the soil nothing;
-eating the turf off a grass block leaves **bare dirt** and starts that block's recovery clock.
+Animals graze for themselves, and every mouthful strips the sward: whether they crop the turf
+directly or pull up a tuft of loose grass, the block underneath is left as **bare dirt** and its
+recovery clock starts. A herd standing in a pen visibly eats it down to soil.
 
 Grazing never ruins soil on its own. Ground is only lost when it stays bare well past the recovery
 window (a full in-game day by default) **and** keeps being trampled by the herd standing on it.

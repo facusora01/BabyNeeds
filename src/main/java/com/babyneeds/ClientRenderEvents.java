@@ -1,8 +1,9 @@
 package com.babyneeds;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
+import org.joml.Quaternionf;
 
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -32,11 +33,30 @@ public class ClientRenderEvents {
         }
 
         if (entry.lying()) {
-            // A sow nursing her litter. There is no vanilla lying pose for pigs, so she is tipped
-            // onto her side and lifted clear of the ground.
-            pose.translate(0.0, 0.35, 0.0);
-            pose.mulPose(Axis.ZP.rotationDegrees(90.0f));
+            tipOntoSide(pose, entity, event.getPartialTick());
         }
+    }
+
+    /**
+     * A sow settled down for a nursing bout. There is no vanilla lying pose for pigs, so she is
+     * rolled onto her side by hand.
+     *
+     * The roll has to happen about the axis she is facing along, not about a fixed world axis:
+     * this event fires before vanilla applies her body rotation, so a plain Z-axis roll tips every
+     * pig the same way in world space and any pig not facing due north or south ends up lying
+     * diagonally. Rolling about her own forward vector lands her flat on her flank whichever way
+     * she happens to be pointing.
+     */
+    private static void tipOntoSide(PoseStack pose, LivingEntity entity, float partialTick) {
+        float bodyYaw = Mth.rotLerp(partialTick, entity.yBodyRotO, entity.yBodyRot);
+        double radians = Math.toRadians(bodyYaw);
+        float forwardX = -(float) Math.sin(radians);
+        float forwardZ = (float) Math.cos(radians);
+
+        // Lift the pivot to roughly half her standing height first, so rolling her does not bury
+        // half the body in the ground.
+        pose.translate(0.0, 0.45, 0.0);
+        pose.mulPose(new Quaternionf().rotateAxis((float) Math.toRadians(90.0), forwardX, 0.0f, forwardZ));
     }
 
     @SubscribeEvent

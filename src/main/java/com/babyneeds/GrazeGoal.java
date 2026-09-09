@@ -13,10 +13,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Looking for food, and wearing the pasture down while doing it. Loose grass and ferns are eaten
- * whole and cost the soil nothing; eating the turf off a grass block leaves bare dirt and starts
- * that block's recovery clock. Nothing is destroyed here - soil is only lost later, and only if the
- * herd keeps standing on the same bare ground long after grass should have come back.
+ * Looking for food, and wearing the pasture down while doing it. Every mouthful - loose grass or
+ * the turf itself - strips the sward off the block underneath, leaving bare dirt and starting that
+ * block's recovery clock. No soil is lost here: dirt grows back on its own. It is only lost later,
+ * and only if the herd keeps standing on the same bare ground long after grass should have returned.
  */
 public class GrazeGoal extends Goal {
 
@@ -102,24 +102,32 @@ public class GrazeGoal extends Goal {
         BlockState state = level.getBlockState(target);
         if (!isEdible(state)) return;
 
+        // Whether the mouthful is loose grass or the turf itself, the block that pays for it is the
+        // soil under it: a grazing animal crops the sward down to the roots. Without this the herd
+        // would nibble the decorative grass off a plains pen forever and the ground would never
+        // visibly wear, which is the signal the whole rotation mechanic depends on.
+        BlockPos turf = state.is(Blocks.GRASS_BLOCK) ? target : target.below();
+        boolean turfIsGrass = level.getBlockState(turf).is(Blocks.GRASS_BLOCK);
+        double grassRatio = PastureBlocks.grassRatioAround(level, turf, Config.PASTURE_SCAN_RADIUS.get());
+
         double food;
         if (state.is(Blocks.GRASS_BLOCK)) {
-            // Eating the turf never ruins the soil on its own: it leaves plain dirt, which vanilla
-            // grass creeps back onto. Only ground that stays bare and keeps being trampled is lost,
-            // and PastureData is what remembers that.
-            double grassRatio = PastureBlocks.grassRatioAround(level, target, Config.PASTURE_SCAN_RADIUS.get());
             food = PastureCalculator.foodValue(grassRatio, species.grassFoodValue());
-            level.setBlock(target, Blocks.DIRT.defaultBlockState(), Block.UPDATE_ALL);
-            if (level instanceof ServerLevel server && Config.PASTURE_DEGRADATION.get()) {
-                PastureData.get(server).markBare(target, server.getGameTime());
-            }
         } else {
-            // Loose grass and ferns grow back on their own; eating them costs the soil nothing.
+            // Loose grass is a fuller mouthful than bare turf, but it takes the sward with it.
             food = species.grassFoodValue();
             level.destroyBlock(target, false);
         }
 
-        level.levelEvent(2001, target, Block.getId(state));
+        if (turfIsGrass) {
+            level.setBlock(turf, Blocks.DIRT.defaultBlockState(), Block.UPDATE_ALL);
+            level.levelEvent(2001, turf, Block.getId(Blocks.GRASS_BLOCK.defaultBlockState()));
+            if (level instanceof ServerLevel server && Config.PASTURE_DEGRADATION.get()) {
+                // Bare from now on: this is where the recovery clock starts.
+                PastureData.get(server).markBare(turf, server.getGameTime());
+            }
+        }
+
         // Mob#ate is vanilla's "I just ate a block" hook - it is what regrows a sheep's wool, and
         // a no-op for everything else, so replacing the vanilla eat goal costs the sheep nothing.
         animal.ate();
