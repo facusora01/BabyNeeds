@@ -17,6 +17,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.EatBlockGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.Cow;
@@ -461,9 +462,11 @@ public class AnimalEvents {
         if (Config.MOTHERS_DEFEND_BABIES.get()) {
             // No target goal to go with it: she only ever has a target because something hurt her
             // baby, so she is never the one who starts it.
-            // Cows are heavy enough to make a charge mean something; the rest just shove.
-            animal.goalSelector.addGoal(1,
-                    new DefendBabyGoal(animal, AnimalState.speciesOf(animal) == Species.COW));
+            // The ram goes first: when she picks it, it takes over from the plain chase.
+            if (AnimalState.speciesOf(animal) == Species.COW) {
+                animal.goalSelector.addGoal(1, new RamGoal(animal));
+            }
+            animal.goalSelector.addGoal(2, new MeleeAttackGoal(animal, Config.DEFEND_SPEED.get(), true));
         }
         animal.goalSelector.addGoal(2, new NurseGoal(animal));
 

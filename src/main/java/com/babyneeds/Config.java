@@ -367,14 +367,28 @@ public class Config {
                     "over at walking pace is an escort, not a defence: 1.9 is a run.")
             .defineInRange("motherhood.defendSpeed", 1.9, 0.5, 5.0);
 
-    public static final ForgeConfigSpec.DoubleValue CHARGE_CHANCE = BUILDER
-            .comment("Chance that a landed blow from a defending cow is a full charge rather than a",
-                    "shove: head down, shoulder in, and whoever it hits goes flying.")
-            .defineInRange("motherhood.chargeChance", 0.3, 0.0, 1.0);
+    public static final ForgeConfigSpec.DoubleValue RAM_CHANCE = BUILDER
+            .comment("Chance a defending cow rams instead of simply chasing, rolled once per",
+                    "opportunity rather than per tick. The ram is the goat's move: she plants",
+                    "herself, drops her head, and runs the whole distance in a straight line.")
+            .defineInRange("motherhood.ramChance", 0.3, 0.0, 1.0);
 
-    public static final ForgeConfigSpec.DoubleValue CHARGE_KNOCKBACK = BUILDER
-            .comment("How far that charge throws its target.")
-            .defineInRange("motherhood.chargeKnockback", 1.6, 0.0, 10.0);
+    public static final ForgeConfigSpec.DoubleValue RAM_KNOCKBACK = BUILDER
+            .comment("How far the impact throws whoever it catches.")
+            .defineInRange("motherhood.ramKnockback", 1.6, 0.0, 10.0);
+
+    public static final ForgeConfigSpec.DoubleValue RAM_DAMAGE = BUILDER
+            .comment("Damage from a connected ram, on top of the knockback.")
+            .defineInRange("motherhood.ramDamage", 3.0, 0.0, 40.0);
+
+    public static final ForgeConfigSpec.DoubleValue RAM_SPEED = BUILDER
+            .comment("How fast she covers the ground mid-charge. This is raw movement, not a walking",
+                    "speed multiplier: the charge does not steer once it has been committed to.")
+            .defineInRange("motherhood.ramSpeed", 0.62, 0.1, 3.0);
+
+    public static final ForgeConfigSpec.IntValue RAM_COOLDOWN_TICKS = BUILDER
+            .comment("Ticks before she can line up another ram, win or miss.")
+            .defineInRange("motherhood.ramCooldownTicks", 100, 20, 100000);
 
     public static final ForgeConfigSpec.DoubleValue FEED_NUTRITION_PER_POINT = BUILDER
             .comment("Nutrition an animal gains per hunger point of food hand-fed to it that is not",

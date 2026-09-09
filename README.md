@@ -166,11 +166,18 @@ close to decides, once, whether to take it on:
   damage. The answer stands for a few minutes, and the orphan will not pester the same animal again
   in that time, so it wanders off to try its luck elsewhere.
 
-And **a mother goes after whoever hurts her baby**, at a run rather than a walk. Farm animals have
-no attack damage in vanilla, so the mod gives them some. A cow is heavy enough that roughly a third
-of her landed blows are a full **charge** - head down, shoulder in, and whoever it hits is thrown
-clear; the rest are shoves. She gives it up when the attacker gets far enough away or her temper runs
-out, and she never starts anything: she only ever has a target because something hurt her calf.
+And **a mother goes after whoever hurts her baby**, at a run rather than a walk. Farm animals have no
+attack damage in vanilla, so the mod gives them some.
+
+A cow has one move beyond the chase: roughly a third of the time she **rams**, the way a goat does.
+She plants herself, drops her head - a wind-up you can see coming and dodge - and then runs the whole
+distance in a straight line, hitting whatever is at the end of it and throwing them clear. The charge
+does not steer once committed, because a charge that follows a dodging player is not a charge, it is
+a magnet; and like a goat's, it is spent if she hits a fence instead of you. Vanilla builds the goat
+version out of brain behaviours, which cows do not have, so this is the same shape rebuilt as a goal.
+
+She gives it all up when the attacker gets far enough away or her temper runs out, and she never
+starts anything: she only ever has a target because something hurt her calf.
 
 **Feeding is not courting.** Anything edible can be hand-fed to an animal and it counts as a meal -
 nutrition by the food's own value, and its effects carried through, so a golden apple is a golden
@@ -246,6 +253,7 @@ default implies in real minutes. The headline knobs:
 - `pig.siltingTicks` / `pig.soilToMudTicks` - how fast a wallow forms and beds itself in
 - `motherhood.adoptionChance` - the odds an adult takes an orphan on
 - `motherhood.defendBabies` / `motherhood.defendRadius` - whether mothers retaliate, and how far
+- `motherhood.ramChance` / `motherhood.ramKnockback` - how often a cow rams, and how hard
 - `loot.juvenileYield` - how much less an adolescent carcass is worth than a grown one
 - `loot.starvedDropMultiplier` / `loot.fullConditionNutrition` - how much a neglected herd costs you
 - `misc.uninstallMode` - clean removal
