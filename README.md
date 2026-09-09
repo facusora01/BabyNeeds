@@ -55,7 +55,13 @@ alone so normal breeding cooldowns still work.
 
 ## Pasture and rotation
 
-Animals graze for themselves, and every mouthful strips the sward: whether they crop the turf
+Animals graze for themselves. What they walk to follows two rules: **whatever is under their feet
+first** - it needs no pathfinding and cannot fail, so a crowded pen keeps feeding its herd until the
+pen itself is bare - and otherwise the nearest grass they can actually *reach*, verified with the
+navigator's own A* before it is chosen. An animal never fixates on grass beyond the fence, or on a
+tuft its herdmates are stood on, and starve staring at it.
+
+Every mouthful strips the sward: whether they crop the turf
 directly or pull up a tuft of loose grass, the block underneath is left as **bare dirt** and its
 recovery clock starts. A herd standing in a pen visibly eats it down to soil.
 

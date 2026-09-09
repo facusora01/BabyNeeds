@@ -1,6 +1,9 @@
 package com.babyneeds;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.List;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -11,24 +14,44 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
 
 /**
  * Looking for food, and wearing the pasture down while doing it. Every mouthful - loose grass or
  * the turf itself - strips the sward off the block underneath, leaving bare dirt and starting that
  * block's recovery clock. No soil is lost here: dirt grows back on its own. It is only lost later,
  * and only if the herd keeps standing on the same bare ground long after grass should have returned.
+ *
+ * Two rules decide what an animal walks to, and both exist because the naive version starved cows
+ * that were standing on grass:
+ *
+ * <ol>
+ *   <li>What is under its feet comes first. It needs no pathfinding and it cannot fail, so a packed
+ *       pen keeps feeding its herd until the pen itself is bare.</li>
+ *   <li>Otherwise, the nearest grass it can actually <em>reach</em>. Candidates go through the
+ *       navigator's own A* before one is picked, so an animal never fixates on grass beyond the
+ *       fence - or on a tuft its herdmates are stood on - and starve staring at it.</li>
+ * </ol>
  */
 public class GrazeGoal extends Goal {
 
-    /** Random probes per search instead of scanning the whole box - cheap for a big herd. */
-    private static final int SEARCH_SAMPLES = 48;
+    /** Blocks around the animal that are looked at exhaustively, nearest first. */
+    private static final int CLOSE_SCAN_RADIUS = 4;
+    /** Random probes over the wider range, for when nothing close is left. */
+    private static final int FAR_SCAN_SAMPLES = 48;
+    /** Pathfinding is not free, so only the closest few candidates are ever tested. */
+    private static final int MAX_PATH_CHECKS = 6;
     private static final int SEARCH_COOLDOWN_TICKS = 60;
+    /** Give up on a target that is taking too long: something is in the way. */
+    private static final int MAX_TRAVEL_TICKS = 120;
     private static final double REACH_SQ = 3.0;
 
     private final Animal animal;
     private final Species species;
     private BlockPos target;
+    private Path path;
     private int chewTicks;
+    private int travelTicks;
     private int searchCooldown;
     private int repathTicks;
 
@@ -49,7 +72,11 @@ public class GrazeGoal extends Goal {
         if (searchCooldown-- > 0) return false;
         searchCooldown = SEARCH_COOLDOWN_TICKS;
 
-        this.target = findGrass();
+        this.path = null;
+        this.target = findGrassUnderfoot();
+        if (target == null) {
+            this.target = findReachableGrass();
+        }
         return target != null;
     }
 
@@ -57,20 +84,31 @@ public class GrazeGoal extends Goal {
     public boolean canContinueToUse() {
         if (target == null) return false;
         if (AnimalState.isLying(animal)) return false;
+        // Dropped rather than starved over: if it has not arrived by now, it is not getting there.
+        if (travelTicks > MAX_TRAVEL_TICKS) return false;
         return isEdible(animal.level().getBlockState(target));
     }
 
     @Override
     public void start() {
         chewTicks = 0;
+        travelTicks = 0;
         repathTicks = 0;
-        moveToTarget();
+        if (withinReach()) return;
+
+        if (path != null) {
+            animal.getNavigation().moveTo(path, 1.0);
+        } else {
+            moveToTarget();
+        }
     }
 
     @Override
     public void stop() {
         target = null;
+        path = null;
         chewTicks = 0;
+        travelTicks = 0;
         animal.getNavigation().stop();
     }
 
@@ -78,8 +116,15 @@ public class GrazeGoal extends Goal {
     public void tick() {
         animal.getLookControl().setLookAt(target.getX() + 0.5, target.getY(), target.getZ() + 0.5);
 
-        if (animal.blockPosition().distSqr(target) > REACH_SQ) {
+        if (!withinReach()) {
             chewTicks = 0;
+            travelTicks++;
+            // The navigator says it is finished and we are still not there, so the way is blocked.
+            // Burn the budget now and let the next search pick something it can actually get to.
+            if (travelTicks > 20 && animal.getNavigation().isDone()) {
+                travelTicks = MAX_TRAVEL_TICKS + 1;
+                return;
+            }
             if (--repathTicks <= 0) {
                 repathTicks = 20;
                 moveToTarget();
@@ -93,8 +138,13 @@ public class GrazeGoal extends Goal {
         target = null;
     }
 
+    private boolean withinReach() {
+        return animal.blockPosition().distSqr(target) <= REACH_SQ;
+    }
+
     private void moveToTarget() {
-        animal.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 1.0);
+        BlockPos stand = standingSpotFor(target);
+        animal.getNavigation().moveTo(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5, 1.0);
     }
 
     private void eat() {
@@ -136,29 +186,82 @@ public class GrazeGoal extends Goal {
         AnimalEvents.eatEffects(animal, net.minecraft.core.particles.ParticleTypes.HAPPY_VILLAGER);
     }
 
-    private BlockPos findGrass() {
-        RandomSource random = animal.getRandom();
+    /**
+     * The mouthful that can never be blocked, missed or contested: the ground the animal is already
+     * standing on, or the tuft it is standing in. Checked before anything else, which is what keeps
+     * a crowded pen fed - a cow hemmed in by five others still has grass under her hooves.
+     */
+    private BlockPos findGrassUnderfoot() {
         Level level = animal.level();
-        int radius = species.grazeRadius();
+        BlockPos at = animal.blockPosition();
+        if (isEdible(level.getBlockState(at))) return at;
+
+        BlockPos below = at.below();
+        return isEdible(level.getBlockState(below)) ? below : null;
+    }
+
+    /**
+     * Nearest grass the animal can actually walk to. Candidates are sorted by distance and handed to
+     * the navigator's A* one at a time; the first that comes back with a path that truly reaches its
+     * destination wins. Anything fenced off, walled in or otherwise unreachable is skipped instead of
+     * being stared at until the animal starves.
+     */
+    private BlockPos findReachableGrass() {
+        List<BlockPos> candidates = collectCandidates();
+        if (candidates.isEmpty()) return null;
+
         BlockPos origin = animal.blockPosition();
+        candidates.sort(Comparator.comparingDouble(origin::distSqr));
 
-        BlockPos best = null;
-        double bestDistance = Double.MAX_VALUE;
+        int checks = 0;
+        for (BlockPos candidate : candidates) {
+            if (checks++ >= MAX_PATH_CHECKS) break;
 
-        for (int i = 0; i < SEARCH_SAMPLES; i++) {
+            Path candidatePath = animal.getNavigation().createPath(standingSpotFor(candidate), 0);
+            if (candidatePath == null || !candidatePath.canReach()) continue;
+
+            this.path = candidatePath;
+            return candidate;
+        }
+        return null;
+    }
+
+    /** Turf is eaten from on top of it; a tuft of grass is eaten from inside it. */
+    private BlockPos standingSpotFor(BlockPos pos) {
+        return animal.level().getBlockState(pos).is(Blocks.GRASS_BLOCK) ? pos.above() : pos;
+    }
+
+    private List<BlockPos> collectCandidates() {
+        Level level = animal.level();
+        BlockPos origin = animal.blockPosition();
+        List<BlockPos> found = new ArrayList<>();
+
+        // Everything close by, exhaustively: in a grazed-down pen the last few tufts are what matter.
+        for (int dx = -CLOSE_SCAN_RADIUS; dx <= CLOSE_SCAN_RADIUS; dx++) {
+            for (int dz = -CLOSE_SCAN_RADIUS; dz <= CLOSE_SCAN_RADIUS; dz++) {
+                for (int dy = -2; dy <= 1; dy++) {
+                    BlockPos pos = origin.offset(dx, dy, dz);
+                    if (isEdible(level.getBlockState(pos))) {
+                        found.add(pos.immutable());
+                    }
+                }
+            }
+        }
+        if (!found.isEmpty()) return found;
+
+        // Nothing close: probe the wider range at random rather than scanning thousands of blocks.
+        RandomSource random = animal.getRandom();
+        int radius = species.grazeRadius();
+        for (int i = 0; i < FAR_SCAN_SAMPLES; i++) {
             BlockPos pos = origin.offset(
                     random.nextInt(radius * 2 + 1) - radius,
                     random.nextInt(5) - 2,
                     random.nextInt(radius * 2 + 1) - radius);
-            if (!isEdible(level.getBlockState(pos))) continue;
-
-            double distance = origin.distSqr(pos);
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                best = pos.immutable();
+            if (isEdible(level.getBlockState(pos))) {
+                found.add(pos.immutable());
             }
         }
-        return best;
+        return found;
     }
 
     private boolean isEdible(BlockState state) {
