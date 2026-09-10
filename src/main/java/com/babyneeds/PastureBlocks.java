@@ -16,6 +16,15 @@ public final class PastureBlocks {
                 || state.is(Blocks.GRASS_BLOCK);
     }
 
+
+    /**
+     * Ground with the turf off it, whichever way it got that way: eaten by the herd (which leaves
+     * the mod's own grazed dirt) or already bare when the animals arrived.
+     */
+    public static boolean isBareSoil(BlockState state) {
+        return state.is(ModBlocks.GRAZED_DIRT.get()) || state.is(Blocks.DIRT);
+    }
+
     /**
      * Share of the soil around a spot that is still grass. Only soil is counted - walls, water and
      * paths are not pasture either way, so a pen against a cliff is not judged as overgrazed.
@@ -26,7 +35,7 @@ public final class PastureBlocks {
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 BlockState state = level.getBlockState(center.offset(dx, 0, dz));
-                if (state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT) || state.is(Blocks.COARSE_DIRT)) {
+                if (state.is(Blocks.GRASS_BLOCK) || isBareSoil(state) || state.is(Blocks.COARSE_DIRT)) {
                     total++;
                     if (state.is(Blocks.GRASS_BLOCK)) grass++;
                 }

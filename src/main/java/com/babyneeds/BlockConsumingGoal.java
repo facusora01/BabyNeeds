@@ -325,7 +325,8 @@ public abstract class BlockConsumingGoal extends Goal {
         Level level = animal.level();
         if (!level.getBlockState(turf).is(Blocks.GRASS_BLOCK)) return;
 
-        level.setBlock(turf, Blocks.DIRT.defaultBlockState(),
+        // Not plain dirt: grass creeps back onto that within seconds and the pasture never wears.
+        level.setBlock(turf, ModBlocks.GRAZED_DIRT.get().defaultBlockState(),
                 net.minecraft.world.level.block.Block.UPDATE_ALL);
         level.levelEvent(2001, turf,
                 net.minecraft.world.level.block.Block.getId(Blocks.GRASS_BLOCK.defaultBlockState()));

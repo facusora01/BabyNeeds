@@ -46,7 +46,8 @@ public final class MuddyWater {
 
     /** Soil a wallow can work on. */
     private static boolean isSoakableSoil(BlockState state) {
-        return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK)
+        return state.is(Blocks.DIRT) || state.is(ModBlocks.GRAZED_DIRT.get())
+                || state.is(Blocks.GRASS_BLOCK)
                 || state.is(Blocks.COARSE_DIRT) || state.is(Blocks.ROOTED_DIRT);
     }
 

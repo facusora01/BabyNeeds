@@ -223,7 +223,7 @@ public class AnimalEvents {
             pasture.forget(pos);
             return;
         }
-        if (!state.is(Blocks.DIRT)) return;
+        if (!PastureBlocks.isBareSoil(state)) return;
 
         long gameTime = server.getGameTime();
         int tramples = pasture.trample(pos, gameTime);

@@ -9,31 +9,26 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Keeps grazed ground bare for as long as it is supposed to stay bare.
+ * Hands grazed ground back to vanilla once it has served its time bare.
  *
- * This is the piece the pasture was missing, and without it the whole degradation chain was dead
- * on arrival. Vanilla grass creeps back onto plain dirt within a couple of minutes, and the mod
- * reads grass underfoot as "the pasture recovered" and throws the block's trampling record away.
- * So the record could never survive the day of grace that has to pass before soil can be lost, and
- * coarse dirt was unreachable no matter how many animals stood on the same square.
+ * Grazing leaves {@link ModBlocks#GRAZED_DIRT}, which vanilla will not spread grass onto - it picks
+ * its targets with a hard check against {@code Blocks.DIRT}, so a lookalike that is not that block
+ * is simply never chosen. All this has to do, then, is turn the ground back into ordinary dirt when
+ * its recovery window is up, and vanilla takes it from there at its own pace.
  *
- * There is no event to cancel - vanilla spreads grass from a random tick on the neighbouring grass
- * block, with no hook of any kind - so the turf is simply taken off again while the ground is still
- * in its recovery window. The mod is already keeping a list of exactly which blocks those are, so
- * this costs one block lookup per tracked block per sweep and touches nothing else in the world.
+ * It is worth saying why it is not the other way round. The first version left plain dirt and took
+ * the turf off again whenever vanilla put it back. That works on paper and is unusable in practice:
+ * grass returns within seconds, so the field flickered between grass and dirt continuously. Ground
+ * that was never a valid target has nothing to flicker about.
  *
- * The window closing is what makes rotation work: move the herd on and the grass comes back by
- * itself; leave them there and the tramples pile up on ground that is not allowed to heal.
+ * The window is what makes rotation mean something: move the herd on and the pasture comes back by
+ * itself; leave them there and the tramples pile up on ground that cannot heal underneath them.
  */
 @Mod.EventBusSubscriber(modid = BabyNeeds.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class PastureRegrowth {
 
-    /**
-     * How often the sweep runs. Grass spread is a random tick, so a block only rarely turns during
-     * any one window; a couple of seconds is short enough that a blade that does come up early is
-     * gone again before it reads as anything but a flicker.
-     */
-    private static final int SWEEP_TICKS = 40;
+    /** Nothing here is urgent any more - the ground is only waiting to be released. */
+    private static final int SWEEP_TICKS = 100;
 
     private PastureRegrowth() {
     }
@@ -59,10 +54,10 @@ public final class PastureRegrowth {
             // Ground in an unloaded chunk is nobody's problem yet, and asking for its state would
             // drag the chunk back in.
             if (!level.isLoaded(pos)) continue;
-            if (pasture.bareTicks(pos, gameTime) >= hold) continue;
+            if (pasture.bareTicks(pos, gameTime) < hold) continue;
 
             BlockState state = level.getBlockState(pos);
-            if (!state.is(Blocks.GRASS_BLOCK)) continue;
+            if (!state.is(ModBlocks.GRAZED_DIRT.get())) continue;
 
             level.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState());
         }

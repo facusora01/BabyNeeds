@@ -28,6 +28,7 @@ public class RootGoal extends BlockConsumingGoal {
     @Override
     protected boolean isTarget(BlockState state) {
         return state.is(Blocks.GRASS_BLOCK)
+                || state.is(ModBlocks.GRAZED_DIRT.get())
                 || state.is(Blocks.DIRT)
                 || state.is(Blocks.COARSE_DIRT)
                 || state.is(Blocks.ROOTED_DIRT)
