@@ -96,19 +96,51 @@ public class PosedPigModel<T extends Pig> extends PigModel<T> {
      * animal cannot do is stretch its own legs out, which is why this half lives in the model.
      */
     private void applyLying(float side) {
-        float fold = Config.LIE_LEG_FOLD.get().floatValue() * side;
+        // Front and hind are posed apart on purpose. An animal down on its flank reaches the front
+        // pair out ahead of the chest and trails the hind pair behind the rump; a single shared
+        // angle can only ever do one of the two, which left the hind legs pointing the wrong way.
+        float frontFold = Config.LIE_FRONT_FOLD.get().floatValue() * side;
+        float hindFold = Config.LIE_HIND_FOLD.get().floatValue() * side;
         float splay = Config.LIE_LEG_SPLAY.get().floatValue() * side;
 
-        rightFrontLeg.xRot = fold;
-        leftFrontLeg.xRot = fold;
-        rightHindLeg.xRot = fold;
-        leftHindLeg.xRot = fold;
+        rightFrontLeg.xRot = frontFold;
+        leftFrontLeg.xRot = frontFold;
+        rightHindLeg.xRot = hindFold;
+        leftHindLeg.xRot = hindFold;
 
         // Mirrored, so they open away from each other rather than leaning together.
         rightFrontLeg.zRot = restFrontZRot + splay;
         leftFrontLeg.zRot = restFrontZRot - splay;
         rightHindLeg.zRot = restHindZRot + splay;
         leftHindLeg.zRot = restHindZRot - splay;
+
+        droopTopLegs(side);
+    }
+
+    /**
+     * The two legs left pointing at the sky. Once the animal is over on its flank the underneath pair
+     * is propped up by the ground and the top pair is held up by nothing at all, so it hangs - and
+     * drawing both pairs identically is what makes a lying pig read as a stiff toy on its side.
+     *
+     * Which pair is on top follows from which way it rolled, so the sign of the lying angle picks
+     * the side rather than a hard-coded left or right. Flip {@code lieAngle} and the droop follows.
+     */
+    private void droopTopLegs(float side) {
+        float droop = Config.LIE_TOP_LEG_DROOP.get().floatValue() * side;
+        if (droop == 0.0f) return;
+
+        // Rolling one way leaves the left pair up, the other way the right pair. Gravity pulls the
+        // hanging legs back down across the body, which is the opposite sense to the roll.
+        boolean leftOnTop = Config.LIE_ANGLE.get() >= 0.0;
+        float lean = leftOnTop ? -droop : droop;
+
+        if (leftOnTop) {
+            leftFrontLeg.zRot += lean;
+            leftHindLeg.zRot += lean;
+        } else {
+            rightFrontLeg.zRot += lean;
+            rightHindLeg.zRot += lean;
+        }
     }
 
     /**
