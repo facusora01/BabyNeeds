@@ -102,24 +102,44 @@ quadruplets). Every extra piglet is bound to her and competes for the same udder
 scales with the litter so none of them goes hungry for it. Without mud anywhere near her, a sow
 throws one piglet like everything else.
 
-Water near a wallow stays ordinary `Blocks.WATER` - it used to be its own tinted fluid, so a puddle
-dug into mud would visibly silt up. It worked as a colour, and it was a trap as a fluid: two distinct
-fluids never really meet in Minecraft, which only merges a fluid's surface height and skips shared
-faces between two blocks of the *same* fluid, so wherever it touched clean water there was a seam - a
-crease in the surface and a lip at the edge, no matter how well the colours themselves blended. Fixing
-that means rewriting vanilla's own fluid renderer, which this project has no way to do without a
-coremod, so the water itself is left alone and every wallow effect is read live off how much mud is
-nearby instead of painted onto a different block.
+Water dug into mud **silts up and turns brown** on its own, and runs clear again if the mud around it
+is taken away. Water colour in Minecraft comes from the biome and is resolved per position by the
+client, so a brown puddle beside clean blue water cannot be a block - it is its own fluid, tinted
+from vanilla's water textures. Every one of its properties mirrors how Forge defines vanilla water,
+deliberately: infinite sources, extinguishing fire, breaking your fall, hydrating farmland, carrying
+boats, and the water tag so anything that asks "is this water?" says yes. A fluid that looks like
+water but does not behave like it is a trap, not a feature - players will treat it as water, because
+it is water, just dirty.
 
-**Soil beds itself in.** Dirt, grass or coarse dirt sitting under water near mud soaks through and
-becomes mud on its own, at a pace timestamped rather than ticked - a hollow flooded ten minutes ago has
-already made progress by the time you walk back to it. Flood a dirt hollow near a mud patch and come
-back two in-game days later to a proper wallow: it is something a farm grows into, not something that
-appears over a lunch break.
+**The brown is not flat.** Every block of it is tinted from how much mud is actually around that
+spot, blended against the biome's own water colour, so the ring against clean water comes out barely
+tinted and only water walled in by mud settles into full opaque brown - the pool shades from its
+banks inwards instead of meeting clean water as a single hard cut.
 
-**The water itself hazes and fogs.** A little suspended mud drifts through water close to a wallow,
-scaled by how much mud is actually nearby, and a swimmer's vision blurs while their head is under it -
-checked every tick, so it clears the instant they surface, not a couple of seconds later.
+A wallow forms rather than appears. **One block of mud touching the water is enough** to start it
+going brown; every extra mud face divides the time, so water boxed in on four sides silts up four
+times faster - fast, but never instant, because a puddle that turns the moment you pour the bucket
+reads as a block swap rather than as something settling. Muddy water that ends up with no mud and no
+muddy water left against it settles clear again, though water in the middle of a pool is held by the
+pool around it, so a wallow never clears from the inside out.
+
+It also **beds itself in**: dirt, grass or coarse dirt sitting under muddy water soaks through and
+becomes mud, and every block it converts makes the water above silt faster. Flood a dirt hollow and
+come back two in-game days later to a proper wallow: a wallow is something a farm grows into, not
+something that appears over a lunch break.
+
+All three changes are timestamps rather than counters, so they keep running while nobody is watching
+- a hole flooded ten minutes ago has already gone brown by the time you walk back to it, without the
+mod having spent a tick on it in the meantime.
+
+Because it carries the water tag, **lava treats it exactly as water**: stone, cobblestone and
+obsidian form the same way. Submerged, it looks the part too - the fog goes brown and visibility
+drops to a few blocks, because silt is opaque.
+
+**It does not slow you down.** It used to, on the theory that mud should cost something to cross,
+and in practice that was the one part players felt as the mod fighting them rather than as mud being
+thick. A wallow is somewhere you can see is filthy, not somewhere you get stuck. The only thing that
+is genuinely its own is that it creeps rather than flows. It comes with a bucket.
 
 ## What pigs do with their time
 
@@ -279,5 +299,5 @@ v0.1.0 - first playable version. Known limits:
 - Vanilla grass spread speed is untouched. Rotation pressure comes from trampled ground compacting
   into coarse dirt instead, which needs no mixin. Slowing vanilla regrowth itself would.
 - Horses, llamas, rabbits and tamed animals still use vanilla growth.
-- A wallow's water is ordinary vanilla water; lava, farmland hydration and everything else that
-  reacts to water reacts to it exactly as vanilla does, because it is vanilla water.
+- Muddy water is tagged as water, so most things treat it as water; a mod that checks for
+  `Fluids.WATER` by identity rather than by tag will not recognise it.

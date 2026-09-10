@@ -389,10 +389,10 @@ public final class AnimalState {
 
     // ------------------------------------------------------------------ environment
 
-    /** A pig standing in actual mud is wallowing - the water beside it is never a wallow on its own. */
+    /** A pig standing in mud, or in the silty water of a proper wallow, is wallowing. */
     public static boolean isInMud(Animal animal) {
         BlockPos at = animal.blockPosition();
-        return MuddyWater.isMud(animal.level().getBlockState(at))
-                || MuddyWater.isMud(animal.level().getBlockState(at.below()));
+        return MuddyWater.isWallow(animal.level().getBlockState(at))
+                || MuddyWater.isWallow(animal.level().getBlockState(at.below()));
     }
 }

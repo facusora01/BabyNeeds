@@ -197,8 +197,8 @@ public class AnimalEvents {
             Motherhood.tickOrphan(animal);
         }
 
-        // A pig is the only reason a wallow gets built at all, so its own tick is where the ground
-        // and water around it are kept honest - no global block scanning anywhere in the mod.
+        // A pig is the only reason this fluid exists, so its own tick is where the wallow around it
+        // is kept honest - no global block scanning anywhere in the mod.
         if (species == Species.PIG && Config.MUDDY_WATER.get()
                 && animal.tickCount % WALLOW_UPDATE_TICKS < TICK_STEP
                 && animal.level() instanceof ServerLevel server) {

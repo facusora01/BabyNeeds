@@ -1,4 +1,7 @@
 {
+  "block.babyneeds.muddy_water": "Agua embarrada",
+  "fluid.babyneeds.muddy_water": "Agua embarrada",
+  "item.babyneeds.muddy_water_bucket": "Cubo de agua embarrada",
   "babyneeds.stage.baby": "Bebé",
   "babyneeds.stage.weanling": "Destetado",
   "babyneeds.stage.juvenile": "Adolescente",

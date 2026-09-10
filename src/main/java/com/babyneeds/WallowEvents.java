@@ -16,10 +16,8 @@ import net.minecraftforge.fml.common.Mod;
  * run where a player just changed a block, and on a slow sweep around each player and each pig, which
  * between them cover every way a wallow is actually built or disturbed.
  *
- * Because {@link WallowData} stores timestamps rather than counters, an infrequent look is enough for
- * the soaking mechanic - a hole flooded ten minutes ago has already made its mud by the time anyone
- * comes back to it. A swimmer's own vision cannot wait that long, though, so that one check runs
- * every tick instead, straight off each player's own position rather than an area sweep.
+ * Because {@link WallowData} stores timestamps rather than counters, an infrequent look is enough -
+ * a hole flooded ten minutes ago has already gone brown by the time anyone comes back to it.
  */
 @Mod.EventBusSubscriber(modid = BabyNeeds.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WallowEvents {
@@ -46,15 +44,10 @@ public class WallowEvents {
         if (!Config.MUDDY_WATER.get()) return;
 
         MinecraftServer server = event.getServer();
-        boolean sweep = server.getTickCount() % SWEEP_INTERVAL == 0;
+        if (server.getTickCount() % SWEEP_INTERVAL != 0) return;
 
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (sweep) {
-                MuddyWater.updateArea(player.serverLevel(), player.blockPosition(), UPDATE_RADIUS);
-            }
-            // Every tick, not on the sweep's own schedule: ducking under a murky puddle has to fog
-            // a player's vision the moment their head goes under, not up to two seconds later.
-            MuddyWater.tickSubmersion(player);
+            MuddyWater.updateArea(player.serverLevel(), player.blockPosition(), UPDATE_RADIUS);
         }
     }
 
