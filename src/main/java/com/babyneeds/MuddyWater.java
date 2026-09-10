@@ -17,10 +17,11 @@ import net.minecraft.world.level.block.state.BlockState;
  * the colours themselves were blended. Fixing that needs rewriting vanilla's own fluid renderer,
  * which this project has no way to do without a coremod.
  *
- * So the water here is always ordinary {@code Blocks.WATER}. What a wallow actually does to it is
- * two things that do not need a second fluid at all: soil sitting under water near mud slowly
- * becomes mud itself, and both an ambient haze and a swimmer's blurred vision are read live off how
- * much mud is nearby, rather than painted onto the water as a different block.
+ * So the water here is always ordinary {@code Blocks.WATER}, and the wallow shows in two ways that
+ * need no second fluid at all. Soil sitting under water near mud slowly becomes mud itself, which is
+ * the mechanic and lives here. And the water is tinted brown by how much mud is around it, which is
+ * purely how it is drawn and lives in {@link MurkyWaterRendering} - both read the same
+ * {@link #mudDensity} so the colour never disagrees with what the ground is actually doing.
  */
 public final class MuddyWater {
 
@@ -54,16 +55,26 @@ public final class MuddyWater {
      * surrounded by mud - see {@link MudDensityCalculator}. Read live off the world every time
      * rather than stored anywhere, so it costs nothing to keep in sync with a wallow a player is
      * actively digging out or filling in.
+     *
+     * Each column is checked at the water's own level <em>and one below it</em>, and the floor is
+     * checked first because that is where the mud usually is. Water in a wallow sits on top of the
+     * mud, not beside it, so looking only sideways missed the single commonest case there is: a
+     * puddle dug into a mud patch read as perfectly clean, which is exactly what it looked like.
      */
     public static double mudDensity(BlockGetter getter, BlockPos center) {
-        return MudDensityCalculator.weightedDensity(MUD_PROXIMITY_RADIUS,
-                (dx, dz) -> isMud(getter.getBlockState(center.offset(dx, 0, dz))));
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        return MudDensityCalculator.weightedDensity(MUD_PROXIMITY_RADIUS, (dx, dz) -> {
+            cursor.set(center.getX() + dx, center.getY() - 1, center.getZ() + dz);
+            if (isMud(getter.getBlockState(cursor))) return true;
+
+            cursor.set(center.getX() + dx, center.getY(), center.getZ() + dz);
+            return isMud(getter.getBlockState(cursor));
+        });
     }
 
     /**
-     * Advances the slow changes in a small area, and throws a little haze into the water while it
-     * is at it. Cheap enough to run whenever a block is placed or broken and on a slow sweep around
-     * each player and each pig.
+     * Advances the soaking in a small area. Cheap enough to run whenever a block is placed or broken
+     * and on a slow sweep around each player and each pig.
      */
     public static void updateArea(Level level, BlockPos center, int radius) {
         if (!Config.MUDDY_WATER.get()) return;
@@ -104,4 +115,27 @@ public final class MuddyWater {
         data.forget(pos);
     }
 
+    /**
+     * Test tooling: soaks every eligible block in range through to mud at once. Two in-game days is
+     * forty real minutes of standing around, which makes the feature impossible to check by hand.
+     *
+     * @return how many blocks were turned
+     */
+    static int soakNow(ServerLevel level, BlockPos center, int radius) {
+        WallowData data = WallowData.get(level);
+        int soaked = 0;
+
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -radius, -radius),
+                center.offset(radius, radius, radius))) {
+            BlockState state = level.getBlockState(pos);
+            if (!isSoakableSoil(state)) continue;
+            if (!level.getBlockState(pos.above()).is(Blocks.WATER)) continue;
+            if (mudDensity(level, pos.above()) <= 0.0) continue;
+
+            level.setBlock(pos, Blocks.MUD.defaultBlockState(), Block.UPDATE_ALL);
+            data.forget(pos);
+            soaked++;
+        }
+        return soaked;
+    }
 }

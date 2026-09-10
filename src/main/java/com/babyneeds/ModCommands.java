@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -69,10 +70,22 @@ public class ModCommands {
                             AnimalState.setMilk(animal, 0.0);
                             AnimalState.setStarvingTicks(animal, Config.STARVATION_GRACE_TICKS.get());
                         }, "babyneeds.cmd.drained")))
+                        // Test tooling again: a wallow bedding itself in takes two in-game days,
+                        // so waiting it out by hand is forty real minutes of standing in a puddle.
+                        .then(Commands.literal("soak").executes(ctx -> soakNearby(ctx.getSource())))
                         .then(Commands.literal("uninstall")
                                 .executes(ctx -> setUninstall(ctx.getSource(), true))
                                 .then(Commands.literal("cancel")
                                         .executes(ctx -> setUninstall(ctx.getSource(), false)))));
+    }
+
+    /** Forces every bit of soil under mud-tinted water in range through to mud right now. */
+    private static int soakNearby(CommandSourceStack source) {
+        int soaked = MuddyWater.soakNow(source.getLevel(),
+                BlockPos.containing(source.getPosition()), (int) DEFAULT_RADIUS);
+        source.sendSuccess(() -> Component.translatable("babyneeds.cmd.soaked", soaked)
+                .withStyle(soaked > 0 ? ChatFormatting.GREEN : ChatFormatting.YELLOW), true);
+        return soaked;
     }
 
     private static int info(CommandSourceStack source) {

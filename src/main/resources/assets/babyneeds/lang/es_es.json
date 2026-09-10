@@ -19,6 +19,7 @@
   "babyneeds.cmd.none_nearby": "No hay animales de BabyNeeds en 8 bloques.",
   "babyneeds.cmd.stage_set": "Etapa aplicada a %s animales.",
   "babyneeds.cmd.drained": "Se vaciaron %s animales a nutrición cero.",
+  "babyneeds.cmd.soaked": "Se convirtieron %s bloques de suelo en barro.",
   "babyneeds.cmd.fed": "Se alimentaron %s animales.",
   "babyneeds.cmd.uninstall_on": "Modo desinstalación ACTIVADO. Se limpiaron %s animales cercanos. Recorré tus granjas para que carguen sus chunks y después quitá el jar.",
   "babyneeds.cmd.uninstall_off": "Modo desinstalación DESACTIVADO. Los animales vuelven a crecer por etapas.",

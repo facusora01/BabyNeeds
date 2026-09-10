@@ -29,8 +29,8 @@ public class WallowData extends SavedData {
     private static final String FILE_ID = "babyneeds_wallow";
     /** Hard ceiling so a very large or very old world cannot grow this without bound. */
     private static final int MAX_ENTRIES = 4096;
-    /** Anything not re-checked in an in-game day was interrupted; drop it. */
-    private static final long STALE_TICKS = 24000L;
+    /** Never drop a clock before the change it is timing could possibly have finished. */
+    private static final long MINIMUM_STALE_TICKS = 24000L;
 
     /**
      * The one slow change a wallow drives. Water itself used to silt up and clear again as a
@@ -85,8 +85,20 @@ public class WallowData extends SavedData {
         }
     }
 
+    /**
+     * How long a clock may go unvisited before it is assumed abandoned. It has to outlast the change
+     * it is timing, and by a wide margin, or the timer can never finish: soil takes two in-game days
+     * to soak through, so a flat one-day cut-off threw the entry away every time the player wandered
+     * off - and the clock silently restarted from zero when they came back. That is why a wallow
+     * never actually bedded itself in.
+     */
+    private static long staleTicks() {
+        return Math.max(MINIMUM_STALE_TICKS, Config.SOIL_TO_MUD_TICKS.get() * 2L);
+    }
+
     private void prune(long gameTime) {
-        pending.entrySet().removeIf(entry -> gameTime - entry.getValue().lastSeen > STALE_TICKS);
+        long stale = staleTicks();
+        pending.entrySet().removeIf(entry -> gameTime - entry.getValue().lastSeen > stale);
         if (pending.size() <= MAX_ENTRIES) return;
 
         List<Map.Entry<Long, Pending>> byAge = new ArrayList<>(pending.entrySet());
