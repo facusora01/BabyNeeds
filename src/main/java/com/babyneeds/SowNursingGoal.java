@@ -9,8 +9,17 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * A sow settling down for a nursing bout. Pigs cannot nurse standing up, so unlike a cow - whose
- * calf can drink whenever it feels like it - a litter only feeds when the mother decides to lie
- * down, and she will not do it if she has no milk to give.
+ * calf can drink whenever it feels like it - a litter only feeds when the mother goes down for them.
+ *
+ * She does not decide that on her own. A hungry piglet asks (see {@link NursingRequest}), she says
+ * yes or no, and this goal is only what carries out a yes. All it looks for is a granted request.
+ *
+ * It deliberately holds no MOVE or JUMP flag. {@link HoldPoseGoal} sits at priority 0 and claims
+ * both the moment anything takes a resting pose, so a goal down here that held them too would be
+ * evicted by it on the very next tick - and being evicted runs {@link #stop()}, which stands her
+ * back up and starts the cooldown. That is not a hypothetical: it is why she used to lie down for a
+ * fraction of a tick, never visibly, and then sit out thirty seconds of cooldown having fed nobody.
+ * Keeping still is HoldPoseGoal's job; this one only decides how long the bout lasts.
  */
 public class SowNursingGoal extends Goal {
 
@@ -24,12 +33,13 @@ public class SowNursingGoal extends Goal {
 
     public SowNursingGoal(Animal sow) {
         this.sow = sow;
-        setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP, Flag.LOOK));
+        setFlags(EnumSet.of(Flag.LOOK));
     }
 
     @Override
     public boolean canUse() {
-        if (AnimalState.lieCooldown(sow) > 0) return false;
+        // The one thing that starts a bout: a piglet asked and she agreed.
+        if (AnimalState.lieRequest(sow) <= 0) return false;
         if (AnimalState.pose(sow).isResting()) return false;
         if (!AnimalState.isLactating(sow) || AnimalState.milk(sow) <= 0.0) return false;
         if (sow.isInWater() || !sow.onGround()) return false;
@@ -48,6 +58,8 @@ public class SowNursingGoal extends Goal {
     public void start() {
         lyingTicks = 0;
         restingSpot = sow.position();
+        // The request is spent the moment she acts on it; the next bout needs a fresh one.
+        AnimalState.setLieRequest(sow, 0);
         sow.getNavigation().stop();
         AnimalEvents.setPose(sow, PigPose.LYING);
     }

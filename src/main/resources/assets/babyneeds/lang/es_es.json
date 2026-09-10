@@ -8,6 +8,10 @@
   "babyneeds.stage.adult": "Adulto",
   "babyneeds.status.line": "%s - %s | Nutrición %s | Leche %s",
   "babyneeds.status.lactating": "  En leche: sus crías pueden mamar.",
+
+  "babyneeds.status.dependents": "  Amamanta a %s | puede acostarse de nuevo en %ss",
+  "babyneeds.status.mother": "  Tiene madre cerca | puede volver a pedir en %ss",
+  "babyneeds.status.orphan": "  Huérfano: no hay madre en rango (%ss)",
   "babyneeds.status.growth": "  Crecimiento a la siguiente etapa: %s%%",
   "babyneeds.msg.baby_only_milk": "Un recién nacido solo puede tomar leche.",
   "babyneeds.msg.too_young_to_milk": "Este animal es demasiado joven para ordeñar.",

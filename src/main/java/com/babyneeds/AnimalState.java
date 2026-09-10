@@ -43,6 +43,8 @@ public final class AnimalState {
     private static final String MUDDINESS = "Muddiness";
     private static final String MUD_SYNCED = "MudSynced";
     private static final String LIE_COOLDOWN = "LieCooldown";
+    private static final String LIE_REQUEST = "LieRequest";
+    private static final String ASK_COOLDOWN = "AskCooldown";
     private static final String INITIALIZED = "Init";
 
     /** Vanilla age pinned on a stage that should read as a baby. */
@@ -302,6 +304,28 @@ public final class AnimalState {
 
     public static void setLieCooldown(Entity entity, int ticks) {
         data(entity).putInt(LIE_COOLDOWN, Math.max(0, ticks));
+    }
+
+    /**
+     * A granted request to lie down, waiting to be acted on. A sow does not decide to nurse on her
+     * own any more: a hungry piglet asks, she says yes or no, and this is the yes - held for a few
+     * seconds so the goal that actually lies her down has time to pick it up.
+     */
+    public static int lieRequest(Entity entity) {
+        return data(entity).getInt(LIE_REQUEST);
+    }
+
+    public static void setLieRequest(Entity entity, int ticks) {
+        data(entity).putInt(LIE_REQUEST, Math.max(0, ticks));
+    }
+
+    /** How long a piglet has to wait before asking again, whatever the answer was. */
+    public static int askCooldown(Entity entity) {
+        return data(entity).getInt(ASK_COOLDOWN);
+    }
+
+    public static void setAskCooldown(Entity entity, int ticks) {
+        data(entity).putInt(ASK_COOLDOWN, Math.max(0, ticks));
     }
 
     // ------------------------------------------------------------------ setup

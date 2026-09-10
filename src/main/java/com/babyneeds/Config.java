@@ -134,6 +134,26 @@ public class Config {
                     "own nursing cooldown so a litter is never left waiting on the mother.")
             .defineInRange("nursing.sowLieCooldownTicks", 600, 0, 100000);
 
+    public static final ForgeConfigSpec.DoubleValue LIE_DOWN_ACCEPT_CHANCE = BUILDER
+            .comment("Odds a sow agrees to lie down when a hungry piglet asks her to, given she has",
+                    "the milk and has not just been down. She is not a vending machine: a refusal is",
+                    "a normal answer, and the piglet has to come back and ask again.")
+            .defineInRange("nursing.lieDownAcceptChance", 0.5, 0.0, 1.0);
+
+    public static final ForgeConfigSpec.DoubleValue LIE_DOWN_MIN_MILK = BUILDER
+            .comment("Milk a sow must be carrying before she will bother lying down at all. Below this",
+                    "the bout would be over before the litter had drunk anything worth the trouble.")
+            .defineInRange("nursing.lieDownMinMilk", 12.0, 0.0, 100.0);
+
+    public static final ForgeConfigSpec.IntValue NURSE_ASK_COOLDOWN_TICKS = BUILDER
+            .comment("Ticks a piglet waits before asking its mother again after being turned down.")
+            .defineInRange("nursing.askCooldownTicks", 100, 1, 100000);
+
+    public static final ForgeConfigSpec.IntValue LIE_REQUEST_TICKS = BUILDER
+            .comment("How long an accepted request stays open. Only needs to outlast the gap between",
+                    "two AI ticks, so the sow acts on a yes she has just given.")
+            .defineInRange("nursing.lieRequestTicks", 60, 1, 1000);
+
     // ---------------------------------------------------------------- pasture
 
     public static final ForgeConfigSpec.BooleanValue PASTURE_DEGRADATION = BUILDER

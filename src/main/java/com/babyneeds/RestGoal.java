@@ -18,6 +18,11 @@ import net.minecraft.world.level.block.Blocks;
  *
  * Both are the same behaviour with a different pose, because the decision is the same one - stop
  * walking, settle, get up again later - and only the reason and the payoff differ.
+ *
+ * Like {@link SowNursingGoal} it holds no movement flag. {@link HoldPoseGoal} takes MOVE and JUMP at
+ * priority 0 as soon as the pose turns into a resting one, and it would evict anything down here
+ * that claimed them - running this goal's stop(), which stands the animal straight back up. So this
+ * decides when to settle and for how long, and HoldPoseGoal is what actually keeps the animal put.
  */
 public class RestGoal extends Goal {
 
@@ -32,7 +37,7 @@ public class RestGoal extends Goal {
 
     public RestGoal(Animal animal) {
         this.animal = animal;
-        setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP));
+        setFlags(EnumSet.noneOf(Flag.class));
     }
 
     @Override

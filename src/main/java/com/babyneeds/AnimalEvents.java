@@ -244,6 +244,10 @@ public class AnimalEvents {
     private static void tickCooldowns(Animal animal) {
         AnimalState.setNurseCooldown(animal, AnimalState.nurseCooldown(animal) - TICK_STEP);
         AnimalState.setLieCooldown(animal, AnimalState.lieCooldown(animal) - TICK_STEP);
+        // The two halves of a nursing request: how long a baby waits before asking again, and how
+        // long a yes stays good for if the mother has not acted on it yet.
+        AnimalState.setAskCooldown(animal, AnimalState.askCooldown(animal) - TICK_STEP);
+        AnimalState.setLieRequest(animal, AnimalState.lieRequest(animal) - TICK_STEP);
     }
 
     private static double tickHunger(Animal animal, Species species) {
@@ -748,6 +752,20 @@ public class AnimalEvents {
         if (AnimalState.isLactating(animal)) {
             player.sendSystemMessage(Component.translatable("babyneeds.status.lactating")
                     .withStyle(ChatFormatting.GRAY));
+            // Who she owes milk to, and whether she is free to go down for them. Without these two
+            // numbers a sow standing next to a hungry piglet is unreadable: there is no way to tell
+            // a stranger's litter from her own, or a refusal from a mod that has stopped working.
+            player.sendSystemMessage(Component.translatable("babyneeds.status.dependents",
+                            AnimalState.dependents(animal),
+                            AnimalState.lieCooldown(animal) / 20)
+                    .withStyle(ChatFormatting.GRAY));
+        }
+        if (GrowthCalculator.acceptsMilk(stage)) {
+            Animal mother = AnimalState.findMother(animal);
+            String key = mother != null ? "babyneeds.status.mother" : "babyneeds.status.orphan";
+            player.sendSystemMessage(Component.translatable(key,
+                            AnimalState.askCooldown(animal) / 20)
+                    .withStyle(mother != null ? ChatFormatting.GRAY : ChatFormatting.YELLOW));
         }
         if (stage != GrowthStage.ADULT) {
             double required = GrowthCalculator.requiredIntake(stage, Config.BASE_STAGE_INTAKE.get(),
