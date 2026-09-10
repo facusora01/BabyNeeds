@@ -601,6 +601,16 @@ public class AnimalEvents {
                 // nutrition, and only when the food is really eaten.
                 if (animal.canFallInLove()) {
                     feedNutrition(animal, Config.FEED_ITEM_NUTRITION.get());
+                    return;
+                }
+                // Vanilla declines the food outright while an animal is on breeding cooldown or
+                // already in love - the wheat is not consumed and nothing happens. That is fine for
+                // a mod where food only ever meant courtship, and wrong for this one, where a
+                // hungry cow in front of a player holding wheat has to be able to eat. So when
+                // vanilla will not take it and the animal actually needs it, the mod does.
+                if (AnimalState.nutrition(animal) < HungerCalculator.MAX_NUTRITION) {
+                    cancel(event);
+                    eatFromHand(player, animal, stack);
                 }
                 return;
             }
@@ -768,11 +778,20 @@ public class AnimalEvents {
                     .withStyle(mother != null ? ChatFormatting.GRAY : ChatFormatting.YELLOW));
         }
         if (stage != GrowthStage.ADULT) {
-            double required = GrowthCalculator.requiredIntake(stage, Config.BASE_STAGE_INTAKE.get(),
-                    Config.GROWTH_SPEED.get());
-            int percent = required <= 0 ? 100
+            // Growing up has two gates, not one: the animal has to have eaten enough AND to have
+            // spent long enough being that size. Reporting only the food made a baby that had
+            // finished eating and was simply still young look like a baby that had stopped growing.
+            double speed = Config.GROWTH_SPEED.get();
+            double required = GrowthCalculator.requiredIntake(stage, Config.BASE_STAGE_INTAKE.get(), speed);
+            int requiredTicks = GrowthCalculator.requiredTicks(stage, Config.BASE_STAGE_TICKS.get(), speed);
+
+            int fed = required <= 0 ? 100
                     : (int) Math.round(100.0 * AnimalState.progress(animal) / required);
-            player.sendSystemMessage(Component.translatable("babyneeds.status.growth", percent)
+            int grown = requiredTicks <= 0 ? 100
+                    : (int) Math.round(100.0 * AnimalState.stageTicks(animal) / requiredTicks);
+
+            player.sendSystemMessage(Component.translatable("babyneeds.status.growth",
+                            Math.min(100, fed), Math.min(100, grown))
                     .withStyle(ChatFormatting.GRAY));
         }
     }

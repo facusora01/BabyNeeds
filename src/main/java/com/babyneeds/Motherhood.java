@@ -52,10 +52,17 @@ public final class Motherhood {
         AnimalState.setAdoptionCooldown(baby, cooldown);
         if (cooldown > 0) return;
 
+        // The wait is over, so the last refusal is spent with it. Without this the adult that said
+        // no was struck off the list permanently, and since a lone baby usually has exactly one
+        // grown animal near it, one unlucky roll meant it could never be adopted by anyone and
+        // starved next to a cow that was standing right there.
+        AnimalState.clearRejectedBy(baby);
+
         Animal candidate = findFoster(baby);
         if (candidate == null) return;
 
-        // One roll per adult, not per second: whichever way it goes, the answer stands for a while.
+        // One roll per wait, not per second: whichever way it goes, the answer stands until the
+        // retry timer runs out, and then the baby is free to try the same adult again.
         AnimalState.setAdoptionCooldown(baby, Config.ADOPTION_RETRY_TICKS.get());
         AnimalState.setRejectedBy(baby, candidate.getUUID());
 

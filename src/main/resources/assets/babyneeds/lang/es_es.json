@@ -12,7 +12,7 @@
   "babyneeds.status.dependents": "  Amamanta a %s | puede acostarse de nuevo en %ss",
   "babyneeds.status.mother": "  Tiene madre cerca | puede volver a pedir en %ss",
   "babyneeds.status.orphan": "  Huérfano: no hay madre en rango (%ss)",
-  "babyneeds.status.growth": "  Crecimiento a la siguiente etapa: %s%%",
+  "babyneeds.status.growth": "  A la siguiente etapa: alimento %s%%, tiempo %s%%",
   "babyneeds.msg.baby_only_milk": "Un recién nacido solo puede tomar leche.",
   "babyneeds.msg.too_young_to_milk": "Este animal es demasiado joven para ordeñar.",
   "babyneeds.msg.too_young_to_shear": "Este animal es demasiado joven para esquilar.",

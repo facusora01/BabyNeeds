@@ -44,11 +44,13 @@ public class MuddyWaterBlock extends LiquidBlock {
 
         // The stuck multiplier alone barely shows on an animal: it is spent on a single move() call,
         // and a mob's move control accelerates it back to full speed on the very next tick from its
-        // own target rather than from its momentum. Taking the drag out of the momentum too is what
-        // makes a pig actually plod through its own wallow instead of trotting across it.
+        // own target rather than from its momentum. So the momentum is damped too - but at half
+        // strength, because both of them at full strength compound every tick and turn a puddle
+        // into tar. Muddy water is meant to be worth walking around, not worth dying in.
         if (entity instanceof LivingEntity living) {
+            double momentumDrag = (1.0 + drag) / 2.0;
             Vec3 motion = living.getDeltaMovement();
-            living.setDeltaMovement(motion.x * drag, motion.y, motion.z * drag);
+            living.setDeltaMovement(motion.x * momentumDrag, motion.y, motion.z * momentumDrag);
         }
     }
 }
