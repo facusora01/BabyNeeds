@@ -35,7 +35,8 @@ public class ScavengeGoal extends Goal {
     @Override
     public boolean canUse() {
         if (!Config.PIGS_EAT_SCRAPS.get()) return false;
-        if (!GrowthCalculator.acceptsSolids(AnimalState.stage(animal))) return false;
+        if (!GrowthCalculator.acceptsSolids(AnimalState.stage(animal),
+                AnimalState.speciesOf(animal))) return false;
         if (AnimalState.pose(animal).isResting()) return false;
         if (AnimalState.nutrition(animal) >= HungerCalculator.MAX_NUTRITION) return false;
         if (searchCooldown-- > 0) return false;

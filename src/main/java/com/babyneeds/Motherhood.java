@@ -45,7 +45,9 @@ public final class Motherhood {
      */
     static void tickOrphan(Animal baby) {
         if (!Config.ALLOW_ADOPTION.get()) return;
-        if (!GrowthCalculator.acceptsMilk(AnimalState.stage(baby))) return;
+        // Adoption exists so an orphan can find a new source of milk. A chick needs no such
+        // thing - it feeds itself - so a species without an udder never goes looking for a mother.
+        if (!GrowthCalculator.acceptsMilk(AnimalState.stage(baby), AnimalState.speciesOf(baby))) return;
         if (AnimalState.findMother(baby) != null) return;
 
         int cooldown = AnimalState.adoptionCooldown(baby) - AnimalEvents.TICK_STEP;

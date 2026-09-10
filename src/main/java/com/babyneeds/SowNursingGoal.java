@@ -84,6 +84,7 @@ public class SowNursingGoal extends Goal {
         return sow.level().getEntitiesOfClass(Animal.class, sow.getBoundingBox().inflate(LITTER_RADIUS),
                 other -> other != sow
                         && sow.getUUID().equals(AnimalState.mother(other))
-                        && GrowthCalculator.acceptsMilk(AnimalState.stage(other)));
+                        && GrowthCalculator.acceptsMilk(AnimalState.stage(other),
+                                AnimalState.speciesOf(other)));
     }
 }

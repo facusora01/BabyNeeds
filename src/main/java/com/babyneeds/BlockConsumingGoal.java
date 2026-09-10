@@ -94,7 +94,7 @@ public abstract class BlockConsumingGoal extends Goal {
     @Override
     public boolean canUse() {
         // A newborn lives on milk alone; everything past that feeds itself.
-        if (!GrowthCalculator.acceptsSolids(AnimalState.stage(animal))) return false;
+        if (!GrowthCalculator.acceptsSolids(AnimalState.stage(animal), species)) return false;
         if (AnimalState.pose(animal).isResting()) return false;
         if (!wantsToEat()) return false;
         if (searchCooldown-- > 0) return false;

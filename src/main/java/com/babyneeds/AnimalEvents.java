@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -103,7 +104,7 @@ public class AnimalEvents {
         AnimalState.initializeNewborn(child, mother);
         AnimalState.applyStageToAge(child, GrowthStage.BABY);
 
-        if (mother != null) {
+        if (mother != null && lactates(mother)) {
             int born = 1 + spawnLitter(mother, event.getParentB());
             // Giving birth is what puts her in milk, and she comes in with a first feed ready for
             // every baby she just had - a litter of four is not born into an empty udder.
@@ -186,6 +187,7 @@ public class AnimalEvents {
         AnimalState.setNutrition(animal, nutrition);
 
         tickGrowth(animal, stage);
+        tickEggs(animal, stage);
         tickStarvation(animal, nutrition);
         tickTrample(animal);
         tickMuddiness(animal);
@@ -258,6 +260,7 @@ public class AnimalEvents {
 
     /** Produces milk out of the mother's own nutrition, and dries her up when nothing demands it. */
     private static double tickLactation(Animal animal, Species species, double nutrition) {
+        if (!species.lactates()) return nutrition;
         if (!AnimalState.isLactating(animal)) return nutrition;
 
         int dependents = countDependents(animal);
@@ -303,7 +306,8 @@ public class AnimalEvents {
                 mother.getBoundingBox().inflate(radius),
                 other -> other != mother
                         && mother.getUUID().equals(AnimalState.mother(other))
-                        && GrowthCalculator.acceptsMilk(AnimalState.stage(other)));
+                        && GrowthCalculator.acceptsMilk(AnimalState.stage(other),
+                                AnimalState.speciesOf(other)));
 
         int count = Math.min(babies.size(), MAX_DEPENDENTS);
         AnimalState.setDependents(mother, count);
@@ -511,8 +515,32 @@ public class AnimalEvents {
             // Lowest priority on purpose: an animal only sits or wallows when nothing it needs is
             // outstanding, so this is what a contented pig does with its spare time.
             animal.goalSelector.addGoal(7, new RestGoal(animal));
+        } else if (species == Species.CHICKEN) {
+            // No nursing goal and no resting: a chicken has no udder to offer and nothing here
+            // gives a bird a pose. It only needs a way to feed itself, from the day it hatches.
+            animal.goalSelector.addGoal(5, new PeckGoal(animal, species));
         } else {
             animal.goalSelector.addGoal(5, new GrazeGoal(animal, species));
+        }
+    }
+
+    /** True for an animal whose kind makes milk at all. */
+    private static boolean lactates(Animal animal) {
+        Species species = AnimalState.speciesOf(animal);
+        return species != null && species.lactates();
+    }
+
+    /**
+     * Holds back a hen's egg timer until she is grown. Vanilla starts laying the moment an animal
+     * stops counting as a baby, which here is the juvenile - the stage whose whole point is looking
+     * grown without being it. Pushing the timer forward is enough; nothing else about laying
+     * changes, so a grown hen behaves exactly as vanilla intends.
+     */
+    private static void tickEggs(Animal animal, GrowthStage stage) {
+        if (!Config.RESTRICT_EGGS_TO_ADULTS.get()) return;
+        if (stage == GrowthStage.ADULT) return;
+        if (animal instanceof Chicken hen) {
+            hen.eggTime = Math.max(hen.eggTime, TICK_STEP * 2);
         }
     }
 
@@ -540,7 +568,8 @@ public class AnimalEvents {
             return;
         }
 
-        if (stack.is(Items.MILK_BUCKET) && GrowthCalculator.acceptsMilk(stage)
+        if (stack.is(Items.MILK_BUCKET)
+                && GrowthCalculator.acceptsBottle(stage, AnimalState.speciesOf(animal))
                 && Config.ALLOW_BOTTLE_FEEDING.get()) {
             bottleFeed(player, animal, stack, stage);
             cancel(event);
@@ -579,7 +608,9 @@ public class AnimalEvents {
     private static void handleClientPrediction(PlayerInteractEvent.EntityInteract event,
                                                Animal animal, Player player, ItemStack stack) {
         boolean governed = (Config.SHOW_STATUS_ON_SNEAK.get() && player.isShiftKeyDown() && stack.isEmpty())
-                || (stack.is(Items.MILK_BUCKET) && Config.ALLOW_BOTTLE_FEEDING.get())
+                || (stack.is(Items.MILK_BUCKET) && Config.ALLOW_BOTTLE_FEEDING.get()
+                        && GrowthCalculator.acceptsBottle(AnimalState.stage(animal),
+                                AnimalState.speciesOf(animal)))
                 || (stack.is(Items.BUCKET) && (animal instanceof Cow || animal instanceof Goat))
                 || (stack.is(Items.SHEARS) && Config.RESTRICT_PRODUCE_TO_ADULTS.get())
                 || animal.isFood(stack) || (isOmnivore(animal) && stack.isEdible());
@@ -624,7 +655,7 @@ public class AnimalEvents {
         // takes over, so the interaction is replaced instead of extended.
         cancel(event);
 
-        if (!GrowthCalculator.acceptsSolids(stage)) {
+        if (!GrowthCalculator.acceptsSolids(stage, AnimalState.speciesOf(animal))) {
             message(player, "babyneeds.msg.baby_only_milk", ChatFormatting.RED);
             return;
         }
@@ -768,7 +799,7 @@ public class AnimalEvents {
                             AnimalState.lieCooldown(animal) / 20)
                     .withStyle(ChatFormatting.GRAY));
         }
-        if (GrowthCalculator.acceptsMilk(stage)) {
+        if (GrowthCalculator.acceptsMilk(stage, AnimalState.speciesOf(animal))) {
             Animal mother = AnimalState.findMother(animal);
             String key = mother != null ? "babyneeds.status.mother" : "babyneeds.status.orphan";
             player.sendSystemMessage(Component.translatable(key,

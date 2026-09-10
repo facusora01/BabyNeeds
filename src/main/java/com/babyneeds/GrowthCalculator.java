@@ -1,23 +1,41 @@
 package com.babyneeds;
 
 /**
- * Turns food into growth. An animal advances a stage only after it has eaten the intake that
- * stage requires AND spent a minimum time in it, so a player cannot bottle-feed a calf to
- * adulthood in ten seconds, and a starving one simply never grows.
+ * Turns food into growth. An animal advances a stage when it has eaten what that stage costs, and
+ * a starving one simply never grows.
+ *
+ * The diet rules take the species as well as the stage, because "newborns drink milk" is a mammal
+ * rule and this mod has a bird in it. A chick has no milk to drink and does not need any: it pecks
+ * from the day it hatches.
  */
 public final class GrowthCalculator {
 
     private GrowthCalculator() {
     }
 
-    /** Milk is only digestible while the animal still nurses. */
-    public static boolean acceptsMilk(GrowthStage stage) {
+    /** Milk is only digestible while the animal still nurses, and only if its kind makes any. */
+    public static boolean acceptsMilk(GrowthStage stage, Species species) {
+        if (species == null || !species.lactates()) return false;
         return stage == GrowthStage.BABY || stage == GrowthStage.WEANLING;
     }
 
-    /** A newborn cannot handle grass; everything past BABY can graze. */
-    public static boolean acceptsSolids(GrowthStage stage) {
+    /**
+     * A newborn mammal cannot handle solid food - a calf has no rumen yet and grass would kill it,
+     * which is precisely why losing its mother is fatal. A chick is born able to feed itself.
+     */
+    public static boolean acceptsSolids(GrowthStage stage, Species species) {
+        if (species != null && species.babyEatsSolids()) return true;
         return stage != GrowthStage.BABY;
+    }
+
+    /**
+     * Whether a bucket of milk from a player still does anything. Narrower than {@link #acceptsMilk}
+     * on purpose: nursing is what a weanling does at its mother's side while it learns to eat, and
+     * hand-feeding it milk out of a bucket would let a player skip that stage entirely. Only a
+     * newborn, which has nothing else it can swallow, can be rescued this way.
+     */
+    public static boolean acceptsBottle(GrowthStage stage, Species species) {
+        return stage == GrowthStage.BABY && species != null && species.lactates();
     }
 
     /**

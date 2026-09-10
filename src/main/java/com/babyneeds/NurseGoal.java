@@ -30,7 +30,7 @@ public class NurseGoal extends Goal {
     @Override
     public boolean canUse() {
         GrowthStage stage = AnimalState.stage(baby);
-        if (!GrowthCalculator.acceptsMilk(stage)) return false;
+        if (!GrowthCalculator.acceptsMilk(stage, AnimalState.speciesOf(baby))) return false;
         if (AnimalState.nurseCooldown(baby) > 0) return false;
         if (!isHungryForMilk(stage)) return false;
 

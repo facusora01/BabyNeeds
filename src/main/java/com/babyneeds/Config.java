@@ -326,6 +326,25 @@ public class Config {
                     "max of 4, a litter that happens is about 69% twins, 18% triplets, 13% quads.")
             .defineInRange("pig.litterRarityExponent", 3.0, 1.0, 10.0);
 
+    // ---------------------------------------------------------------- chickens
+
+    public static final ForgeConfigSpec.DoubleValue PECK_FOOD_VALUE = BUILDER
+            .comment("Nutrition a chicken gets from working over a patch of ground. Small on purpose:",
+                    "a chicken lives off what it can find, not off what it can dig up, so a flock",
+                    "needs range rather than depth. Unlike a pig, it leaves the grass where it is.")
+            .defineInRange("chicken.peckFoodValue", 6.0, 0.0, 100.0);
+
+    public static final ForgeConfigSpec.IntValue PECK_TICKS = BUILDER
+            .comment("Ticks a chicken spends head-down before a peck counts. Quicker than a pig's",
+                    "rooting, and worth much less.")
+            .defineInRange("chicken.peckTicks", 30, 1, 6000);
+
+    public static final ForgeConfigSpec.BooleanValue RESTRICT_EGGS_TO_ADULTS = BUILDER
+            .comment("Only grown hens lay eggs. Vanilla lays on a timer the moment a chick stops",
+                    "being a baby, which would hand a player eggs from a juvenile - the one stage",
+                    "that is meant to look grown and not be.")
+            .define("chicken.restrictEggsToAdults", true);
+
     // ---------------------------------------------------------------- carcass condition
 
     public static final ForgeConfigSpec.BooleanValue CONDITION_AFFECTS_DROPS = BUILDER

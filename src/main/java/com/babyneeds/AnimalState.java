@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.animal.Chicken;
 import net.minecraft.world.entity.animal.Cow;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Sheep;
@@ -63,6 +64,7 @@ public final class AnimalState {
         if (entity instanceof Sheep) return Species.SHEEP;
         if (entity instanceof Pig) return Species.PIG;
         if (entity instanceof Goat) return Species.GOAT;
+        if (entity instanceof Chicken) return Species.CHICKEN;
         return null;
     }
 

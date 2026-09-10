@@ -11,20 +11,39 @@ public class GrowthCalculatorTest {
 
     @Test
     public void babyDrinksMilkAndCannotEatGrass() {
-        assertTrue(GrowthCalculator.acceptsMilk(GrowthStage.BABY));
-        assertFalse(GrowthCalculator.acceptsSolids(GrowthStage.BABY));
+        assertTrue(GrowthCalculator.acceptsMilk(GrowthStage.BABY, Species.COW));
+        assertFalse(GrowthCalculator.acceptsSolids(GrowthStage.BABY, Species.COW));
     }
 
     @Test
     public void weanlingDoesBoth() {
-        assertTrue(GrowthCalculator.acceptsMilk(GrowthStage.WEANLING));
-        assertTrue(GrowthCalculator.acceptsSolids(GrowthStage.WEANLING));
+        assertTrue(GrowthCalculator.acceptsMilk(GrowthStage.WEANLING, Species.COW));
+        assertTrue(GrowthCalculator.acceptsSolids(GrowthStage.WEANLING, Species.COW));
     }
 
     @Test
     public void juvenileIsOffMilk() {
-        assertFalse(GrowthCalculator.acceptsMilk(GrowthStage.JUVENILE));
-        assertTrue(GrowthCalculator.acceptsSolids(GrowthStage.JUVENILE));
+        assertFalse(GrowthCalculator.acceptsMilk(GrowthStage.JUVENILE, Species.COW));
+        assertTrue(GrowthCalculator.acceptsSolids(GrowthStage.JUVENILE, Species.COW));
+    }
+
+    @Test
+    public void onlyANewbornTakesABottle() {
+        // A weanling nurses at its mother's side; letting a player pour milk into it out of a
+        // bucket would skip the stage the mod exists to make matter.
+        assertTrue(GrowthCalculator.acceptsBottle(GrowthStage.BABY, Species.COW));
+        assertFalse(GrowthCalculator.acceptsBottle(GrowthStage.WEANLING, Species.COW));
+        assertFalse(GrowthCalculator.acceptsBottle(GrowthStage.JUVENILE, Species.COW));
+    }
+
+    @Test
+    public void aChickFeedsItselfAndTakesNoMilkAtAnyAge() {
+        // The bird is the reason these rules take a species: nothing about an udder applies to it,
+        // and a chick that could not eat solids would starve on the day it hatched.
+        assertTrue(GrowthCalculator.acceptsSolids(GrowthStage.BABY, Species.CHICKEN));
+        assertFalse(GrowthCalculator.acceptsMilk(GrowthStage.BABY, Species.CHICKEN));
+        assertFalse(GrowthCalculator.acceptsMilk(GrowthStage.WEANLING, Species.CHICKEN));
+        assertFalse(GrowthCalculator.acceptsBottle(GrowthStage.BABY, Species.CHICKEN));
     }
 
     @Test
