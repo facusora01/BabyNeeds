@@ -32,13 +32,14 @@ public class WallowData extends SavedData {
     /** Anything not re-checked in an in-game day was interrupted; drop it. */
     private static final long STALE_TICKS = 24000L;
 
-    /** The three slow changes a wallow drives. */
+    /**
+     * The one slow change a wallow drives. Water itself used to silt up and clear again as a
+     * distinct fluid, which is why this is an enum of one rather than a plain flag - the timestamp
+     * bookkeeping below was built to track several changes at once, and soaking still needs exactly
+     * that: a start time, a last-seen time, and a way to tell it apart if anything else is added.
+     */
     public enum Change {
-        /** Clean water with mud against it, going brown. */
-        SILTING,
-        /** Muddy water cut off from all mud, settling clear again. */
-        CLEARING,
-        /** Soil under muddy water, soaking through into mud. */
+        /** Soil under water near mud, soaking through into mud. */
         SOAKING
     }
 

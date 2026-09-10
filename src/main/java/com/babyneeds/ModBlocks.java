@@ -2,7 +2,6 @@ package com.babyneeds;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -13,10 +12,6 @@ public class ModBlocks {
 
     public static final DeferredRegister<Block> BLOCKS =
             DeferredRegister.create(ForgeRegistries.BLOCKS, BabyNeeds.MODID);
-
-    /** The in-world form of the wallow. Copies water, then adds the drag of thick mud. */
-    public static final RegistryObject<LiquidBlock> MUDDY_WATER_BLOCK = BLOCKS.register("muddy_water",
-            () -> new MuddyWaterBlock(ModFluids.MUDDY_WATER, BlockBehaviour.Properties.copy(Blocks.WATER)));
 
     /**
      * Ground the herd has eaten the turf off. It is dirt in every way a player can tell - same

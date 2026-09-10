@@ -15,6 +15,9 @@ public class BabyNeedsClient {
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
+        // Deferred to the main thread: it edits shared rendering state that Forge has already
+        // finished building, and setup events run off-thread by default.
+        event.enqueueWork(MurkyWaterRendering::install);
         BabyNeeds.LOGGER.info("BabyNeeds client setup complete.");
     }
 

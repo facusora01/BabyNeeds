@@ -3,33 +3,28 @@ package com.babyneeds;
 import java.util.function.BiPredicate;
 
 /**
- * The visual math behind a wallow's edge: how the render tint of muddy water eases into the plain
- * water beside it instead of jumping straight from one colour to the other.
- *
- * A single flat brown for every muddy water block reads as a block swap rather than as silt in
- * water, because the block right against clean water is exactly as opaque as one boxed in by mud
- * on every side. What actually happens at the edge of a real wallow is a haze that thins out - so
- * this reads a little of the neighbourhood around each block and eases the tint by how "in the
- * wallow" that spot is, rather than treating every muddy water block the same.
+ * How strongly a spot reads as "near mud" - the number that drives every murky-water cue: how
+ * often a haze particle shows up, whether soil under the water is soaking through, whether a
+ * swimmer's vision gets fogged. One reading, several uses, so all of them agree on where the wallow
+ * actually is instead of each rolling its own notion of nearby.
  *
  * Kept free of Minecraft types, the same way every other calculator in this mod is, so the falloff
- * shape and the colour interpolation can be tested without a running game.
- * {@link MuddyWater#wallowDensity} is what wires it to real block lookups.
+ * shape can be tested without a running game. {@link MuddyWater#mudDensity} is what wires it to
+ * real block lookups.
  */
-public final class MudTintCalculator {
+public final class MudDensityCalculator {
 
-    private MudTintCalculator() {
+    private MudDensityCalculator() {
     }
 
     /**
-     * How "in the wallow" a spot reads, from a disc of samples out to {@code radius} blocks: 0 is
-     * clean water with nothing muddy anywhere near it, 1 is walled in by mud or more muddy water on
-     * every side. Distance-weighted so the reading changes gradually from block to block instead of
-     * jumping the moment a sample point crosses in or out of the disc.
+     * A distance-weighted reading from a disc of samples out to {@code radius} blocks: 0 is
+     * nothing muddy anywhere near it, 1 is mud on every side. Weighted so the reading changes
+     * gradually from block to block instead of jumping the moment a sample point crosses in or out
+     * of the disc.
      *
      * @param radius  how far out to sample, in blocks
-     * @param isMuddy told, for an offset (dx, dz) from the centre, whether that spot is mud or
-     *                muddy water
+     * @param isMuddy told, for an offset (dx, dz) from the centre, whether that spot is mud
      */
     public static double weightedDensity(int radius, BiPredicate<Integer, Integer> isMuddy) {
         double weighted = 0.0;
@@ -51,8 +46,8 @@ public final class MudTintCalculator {
     }
 
     /**
-     * Eases a 0-1 fraction so the middle of the transition moves fastest and both ends settle in
-     * gently, instead of the tint changing at a constant rate all the way across the wallow.
+     * Eases a 0-1 fraction so the middle of the range moves fastest and both ends settle in gently,
+     * instead of every effect scaling at a constant rate all the way across a wallow.
      */
     public static double ease(double fraction) {
         double clamped = Math.max(0.0, Math.min(1.0, fraction));
@@ -61,8 +56,8 @@ public final class MudTintCalculator {
 
     /**
      * Blends two colours (0xRRGGBB, any leading byte ignored on the way in) by a 0-1 fraction and
-     * returns the result fully opaque - 0xFF in the leading byte, matching what the renderer wants
-     * a fluid tint packed as.
+     * returns the result fully opaque - 0xFF in the leading byte, which is how the fluid renderer
+     * wants a tint packed.
      */
     public static int blend(int fromRgb, int toRgb, double fraction) {
         double t = Math.max(0.0, Math.min(1.0, fraction));

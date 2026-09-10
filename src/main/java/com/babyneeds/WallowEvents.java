@@ -17,7 +17,9 @@ import net.minecraftforge.fml.common.Mod;
  * between them cover every way a wallow is actually built or disturbed.
  *
  * Because {@link WallowData} stores timestamps rather than counters, an infrequent look is enough -
- * a hole flooded ten minutes ago has already gone brown by the time anyone comes back to it.
+ * a hole flooded ten minutes ago has already made its mud by the time anyone comes back to it. How
+ * the water looks needs no tick at all: that is read straight off the world as it is drawn, in
+ * {@link MurkyWaterRendering}.
  */
 @Mod.EventBusSubscriber(modid = BabyNeeds.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class WallowEvents {

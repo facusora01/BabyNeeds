@@ -102,44 +102,32 @@ quadruplets). Every extra piglet is bound to her and competes for the same udder
 scales with the litter so none of them goes hungry for it. Without mud anywhere near her, a sow
 throws one piglet like everything else.
 
-Water dug into mud **silts up and turns brown** on its own, and runs clear again if the mud around it
-is taken away. Water colour in Minecraft comes from the biome and is resolved per position by the
-client, so a brown puddle beside clean blue water cannot be a block - it is its own fluid, tinted
-from vanilla's water textures. Every one of its properties mirrors how Forge defines vanilla water,
-deliberately: infinite sources, extinguishing fire, breaking your fall, hydrating farmland, carrying
-boats, and the water tag so anything that asks "is this water?" says yes. A fluid that looks like
-water but does not behave like it is a trap, not a feature - players will treat it as water, because
-it is water, just dirty.
+**Water near mud turns brown**, and it is still ordinary `Blocks.WATER` while it does. Only the
+colour changes: the tint is read per block from how much mud is around that spot, blended against the
+biome's own water colour, so a pool shades from its banks inwards instead of meeting clean water at a
+hard line. Put your head under and the fog goes brown and closes in, thicker the deeper into the
+wallow you are.
 
-**The brown is not flat.** Every block of it is tinted from how much mud is actually around that
-spot, blended against the biome's own water colour, so the ring against clean water comes out barely
-tinted and only water walled in by mud settles into full opaque brown - the pool shades from its
-banks inwards instead of meeting clean water as a single hard cut.
+It was its own fluid once, which is the obvious way to do it and the wrong one. Two distinct fluids
+never merge: vanilla decides whether a neighbour counts towards forming a source with `Fluid.isSame`,
+and `WaterFluid.isSame` compares by hand against `Fluids.WATER` and `Fluids.FLOWING_WATER`, so clean
+water can never count a muddy neighbour whatever a mod does. Two clean sources make a source between
+them, two muddy ones do, **one of each never does** - and the surface mesh has the same rule, which is
+where the seam at the edge came from. Leaving it as vanilla water means every one of those mechanics
+is vanilla's, because it is vanilla's fluid.
 
-A wallow forms rather than appears. **One block of mud touching the water is enough** to start it
-going brown; every extra mud face divides the time, so water boxed in on four sides silts up four
-times faster - fast, but never instant, because a puddle that turns the moment you pour the bucket
-reads as a block swap rather than as something settling. Muddy water that ends up with no mud and no
-muddy water left against it settles clear again, though water in the middle of a pool is held by the
-pool around it, so a wallow never clears from the inside out.
+The cost is one hack, kept small and loud about itself: Forge stores a fluid's rendering in a private
+field written once at registration, so tinting vanilla water means reaching into that field and
+putting a wrapper there that delegates everything except the tint and the fog. It is client-only,
+runs once at startup, and if the reflection is ever refused it logs and gives up - water goes back to
+looking like water and nothing else in the mod notices. A second mod that recolours water the same
+way would conflict with it.
 
-It also **beds itself in**: dirt, grass or coarse dirt sitting under muddy water soaks through and
-becomes mud, and every block it converts makes the water above silt faster. Flood a dirt hollow and
-come back two in-game days later to a proper wallow: a wallow is something a farm grows into, not
-something that appears over a lunch break.
-
-All three changes are timestamps rather than counters, so they keep running while nobody is watching
-- a hole flooded ten minutes ago has already gone brown by the time you walk back to it, without the
-mod having spent a tick on it in the meantime.
-
-Because it carries the water tag, **lava treats it exactly as water**: stone, cobblestone and
-obsidian form the same way. Submerged, it looks the part too - the fog goes brown and visibility
-drops to a few blocks, because silt is opaque.
-
-**It does not slow you down.** It used to, on the theory that mud should cost something to cross,
-and in practice that was the one part players felt as the mod fighting them rather than as mud being
-thick. A wallow is somewhere you can see is filthy, not somewhere you get stuck. The only thing that
-is genuinely its own is that it creeps rather than flows. It comes with a bucket.
+**Soil beds itself in.** Dirt, grass or coarse dirt sitting under water near mud soaks through and
+becomes mud on its own, at a pace timestamped rather than ticked - a hollow flooded ten minutes ago has
+already made progress by the time you walk back to it. Flood a dirt hollow near a mud patch and come
+back two in-game days later to a proper wallow: it is something a farm grows into, not something that
+appears over a lunch break.
 
 ## What pigs do with their time
 
@@ -299,5 +287,7 @@ v0.1.0 - first playable version. Known limits:
 - Vanilla grass spread speed is untouched. Rotation pressure comes from trampled ground compacting
   into coarse dirt instead, which needs no mixin. Slowing vanilla regrowth itself would.
 - Horses, llamas, rabbits and tamed animals still use vanilla growth.
-- Muddy water is tagged as water, so most things treat it as water; a mod that checks for
-  `Fluids.WATER` by identity rather than by tag will not recognise it.
+- A wallow's water is ordinary vanilla water; lava, farmland hydration, source forming and
+  everything else reacts exactly as vanilla does, because it is vanilla water. Colouring it needs
+  reflection into a private Forge field, so a second mod that recolours water will conflict, and a
+  future Forge version could move the field - in which case water simply stops looking muddy.
