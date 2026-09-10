@@ -3,6 +3,7 @@ package com.babyneeds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -37,6 +38,19 @@ public final class MuddyWater {
 
     public static boolean isMuddyWater(BlockState state) {
         return state.is(ModBlocks.MUDDY_WATER_BLOCK.get());
+    }
+
+    /** How far out to look when judging how deep in the wallow a block is, for the render tint. */
+    private static final int EDGE_BLEND_RADIUS = 3;
+
+    /**
+     * How strongly a position reads as wallow rather than clean water, for blending the render
+     * tint between the two - see {@link MudTintCalculator}. This is purely a rendering question: it
+     * runs on the client, at mesh build time, and never touches game state.
+     */
+    public static double wallowDensity(BlockAndTintGetter getter, BlockPos center) {
+        return MudTintCalculator.weightedDensity(EDGE_BLEND_RADIUS,
+                (dx, dz) -> isWallow(getter.getBlockState(center.offset(dx, 0, dz))));
     }
 
     /** A wallow to lie in: mud underfoot, or standing in the silty water itself. */

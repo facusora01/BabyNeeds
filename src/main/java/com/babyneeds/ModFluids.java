@@ -12,11 +12,13 @@ import javax.annotation.Nullable;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.FlowingFluid;
@@ -97,7 +99,22 @@ public class ModFluids {
 
                         @Override
                         public int getTintColor() {
+                            // The flat fallback - used for the bucket icon and anywhere else there
+                            // is no world position to read a neighbourhood from.
                             return TINT;
+                        }
+
+                        @Override
+                        public int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
+                            // Vanilla water right against a wallow's edge keeps rendering with its
+                            // own biome tint, which this cannot touch - so the blend lives entirely
+                            // on this side. The ring of muddy water right against clean water reads
+                            // almost exactly that same biome colour, and only water walled in by mud
+                            // on every side settles into full opaque brown, so the two meet as a
+                            // haze rather than a one-block cut.
+                            int waterColor = BiomeColors.getAverageWaterColor(getter, pos);
+                            double density = MuddyWater.wallowDensity(getter, pos);
+                            return MudTintCalculator.blend(waterColor, TINT, MudTintCalculator.ease(density));
                         }
 
                         @Override
