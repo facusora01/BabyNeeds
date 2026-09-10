@@ -26,9 +26,13 @@ public class Config {
     // ---------------------------------------------------------------- hunger
 
     public static final ForgeConfigSpec.DoubleValue HUNGER_DECAY_PER_MINUTE = BUILDER
-            .comment("Nutrition (0-100) lost per real minute. 1.2 = a full animal empties in about",
-                    "83 minutes, so it must find grass a few times per in-game day.")
-            .defineInRange("hunger.decayPerMinute", 1.2, 0.0, 100.0);
+            .comment("Nutrition (0-100) lost per real minute. An in-game day is 20 real minutes, so",
+                    "3.5 empties a full animal in a day and a half of game time - it grazes most",
+                    "days and starves if a pen is left without pasture over a weekend. Much lower",
+                    "and an animal can go most of a week without eating, which makes the whole",
+                    "feeding chain decorative. A lactating mother spends far more than this on top,",
+                    "because milk is made out of what she ate.")
+            .defineInRange("hunger.decayPerMinute", 3.5, 0.0, 100.0);
 
     public static final ForgeConfigSpec.DoubleValue GRAZE_THRESHOLD = BUILDER
             .comment("Nutrition below which an animal actively goes looking for grass.")
