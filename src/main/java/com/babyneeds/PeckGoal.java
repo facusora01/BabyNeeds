@@ -56,6 +56,15 @@ public class PeckGoal extends BlockConsumingGoal {
     protected void consume(BlockPos pos, BlockState state) {
         if (!(animal.level() instanceof ServerLevel server)) return;
 
+        // Most pecks come up empty, and that is what pays for the range. A chicken can feed on
+        // ground a cow cannot use and a pig would destroy, so the limit on it is not where it can
+        // eat but how rarely the eating works. A miss takes nothing out of the patch either - the
+        // ground is only worn by food that actually left it.
+        if (animal.getRandom().nextDouble() >= Config.PECK_SUCCESS_CHANCE.get()) {
+            server.levelEvent(2001, pos, net.minecraft.world.level.block.Block.getId(state));
+            return;
+        }
+
         int timesWorked = PastureData.get(server).root(pos, server.getGameTime(),
                 Config.ROOT_RECOVERY_TICKS.get());
         double food = RootingCalculator.yield(

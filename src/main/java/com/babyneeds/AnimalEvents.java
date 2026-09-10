@@ -780,12 +780,21 @@ public class AnimalEvents {
 
     static void sendStatus(Player player, Animal animal) {
         GrowthStage stage = AnimalState.stage(animal);
+        Species species = AnimalState.speciesOf(animal);
         Component stageName = Component.translatable("babyneeds.stage." + stage.key());
-        Component line = Component.translatable("babyneeds.status.line",
-                animal.getType().getDescription(),
-                stageName,
-                (int) Math.round(AnimalState.nutrition(animal)),
-                (int) Math.round(AnimalState.milk(animal)));
+
+        // Milk is only worth a number on an animal that could have some. A chicken has no udder at
+        // all, and nothing below adult has one yet, so printing "Milk 0" for them reported a real
+        // reading of a quantity that does not exist and read as the mod being confused.
+        boolean couldHaveMilk = species != null && species.lactates() && stage == GrowthStage.ADULT;
+        Component line = couldHaveMilk
+                ? Component.translatable("babyneeds.status.line",
+                        animal.getType().getDescription(), stageName,
+                        (int) Math.round(AnimalState.nutrition(animal)),
+                        (int) Math.round(AnimalState.milk(animal)))
+                : Component.translatable("babyneeds.status.line_dry",
+                        animal.getType().getDescription(), stageName,
+                        (int) Math.round(AnimalState.nutrition(animal)));
         player.sendSystemMessage(line.copy().withStyle(ChatFormatting.AQUA));
 
         if (AnimalState.isLactating(animal)) {
@@ -799,7 +808,7 @@ public class AnimalEvents {
                             AnimalState.lieCooldown(animal) / 20)
                     .withStyle(ChatFormatting.GRAY));
         }
-        if (GrowthCalculator.acceptsMilk(stage, AnimalState.speciesOf(animal))) {
+        if (GrowthCalculator.acceptsMilk(stage, species)) {
             Animal mother = AnimalState.findMother(animal);
             String key = mother != null ? "babyneeds.status.mother" : "babyneeds.status.orphan";
             player.sendSystemMessage(Component.translatable(key,

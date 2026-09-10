@@ -7,6 +7,7 @@
   "babyneeds.stage.juvenile": "Juvenile",
   "babyneeds.stage.adult": "Adult",
   "babyneeds.status.line": "%s - %s | Nutrition %s | Milk %s",
+  "babyneeds.status.line_dry": "%s - %s | Nutrition %s",
   "babyneeds.status.lactating": "  In milk: her babies can nurse.",
 
   "babyneeds.status.dependents": "  Nursing %s | can lie down again in %ss",

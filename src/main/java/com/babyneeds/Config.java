@@ -334,6 +334,14 @@ public class Config {
                     "needs range rather than depth. Unlike a pig, it leaves the grass where it is.")
             .defineInRange("chicken.peckFoodValue", 6.0, 0.0, 100.0);
 
+    public static final ForgeConfigSpec.DoubleValue PECK_SUCCESS_CHANCE = BUILDER
+            .comment("Odds that a peck actually turns up anything. A chicken can feed on ground that",
+                    "no other animal here can touch, so what balances it is that most of its pecking",
+                    "comes up empty - it works the ground over and over for the few times it finds a",
+                    "seed or a grub. A miss costs the patch nothing, so the ground only wears from",
+                    "food actually taken out of it.")
+            .defineInRange("chicken.peckSuccessChance", 0.30, 0.0, 1.0);
+
     public static final ForgeConfigSpec.IntValue PECK_TICKS = BUILDER
             .comment("Ticks a chicken spends head-down before a peck counts. Quicker than a pig's",
                     "rooting, and worth much less.")
