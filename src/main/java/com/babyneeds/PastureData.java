@@ -108,6 +108,19 @@ public class PastureData extends SavedData {
         return plot == null ? 0L : Math.max(0L, gameTime - plot.bareSince);
     }
 
+    /**
+     * Every block the pasture is still keeping a clock on, as packed positions. Handed out as a
+     * copy because the caller walks it while the world is being changed underneath.
+     */
+    public long[] trackedPositions() {
+        long[] out = new long[plots.size()];
+        int i = 0;
+        for (Long key : plots.keySet()) {
+            out[i++] = key;
+        }
+        return out;
+    }
+
     /** Grass grew back, or the soil was lost: either way there is nothing left to track. */
     public void forget(BlockPos pos) {
         if (plots.remove(pos.asLong()) != null) {

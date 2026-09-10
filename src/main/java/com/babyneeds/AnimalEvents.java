@@ -316,10 +316,8 @@ public class AnimalEvents {
         AnimalState.addStageTicks(animal, TICK_STEP);
         double speed = Config.GROWTH_SPEED.get();
         double required = GrowthCalculator.requiredIntake(stage, Config.BASE_STAGE_INTAKE.get(), speed);
-        int requiredTicks = GrowthCalculator.requiredTicks(stage, Config.BASE_STAGE_TICKS.get(), speed);
 
-        if (!GrowthCalculator.canAdvance(stage, AnimalState.progress(animal), required,
-                AnimalState.stageTicks(animal), requiredTicks)) {
+        if (!GrowthCalculator.canAdvance(stage, AnimalState.progress(animal), required)) {
             return;
         }
 
@@ -778,20 +776,12 @@ public class AnimalEvents {
                     .withStyle(mother != null ? ChatFormatting.GRAY : ChatFormatting.YELLOW));
         }
         if (stage != GrowthStage.ADULT) {
-            // Growing up has two gates, not one: the animal has to have eaten enough AND to have
-            // spent long enough being that size. Reporting only the food made a baby that had
-            // finished eating and was simply still young look like a baby that had stopped growing.
-            double speed = Config.GROWTH_SPEED.get();
-            double required = GrowthCalculator.requiredIntake(stage, Config.BASE_STAGE_INTAKE.get(), speed);
-            int requiredTicks = GrowthCalculator.requiredTicks(stage, Config.BASE_STAGE_TICKS.get(), speed);
-
+            double required = GrowthCalculator.requiredIntake(stage, Config.BASE_STAGE_INTAKE.get(),
+                    Config.GROWTH_SPEED.get());
             int fed = required <= 0 ? 100
                     : (int) Math.round(100.0 * AnimalState.progress(animal) / required);
-            int grown = requiredTicks <= 0 ? 100
-                    : (int) Math.round(100.0 * AnimalState.stageTicks(animal) / requiredTicks);
 
-            player.sendSystemMessage(Component.translatable("babyneeds.status.growth",
-                            Math.min(100, fed), Math.min(100, grown))
+            player.sendSystemMessage(Component.translatable("babyneeds.status.growth", Math.min(100, fed))
                     .withStyle(ChatFormatting.GRAY));
         }
     }

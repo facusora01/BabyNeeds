@@ -35,26 +35,23 @@ public final class GrowthCalculator {
         return Math.max(0.0, baseIntake * factor / safeSpeed);
     }
 
-    /** Minimum ticks in a stage, so growth stays a process even with unlimited food. */
-    public static int requiredTicks(GrowthStage stage, int baseTicks, double speedMultiplier) {
-        double safeSpeed = speedMultiplier <= 0 ? 1.0 : speedMultiplier;
-        double factor = switch (stage) {
-            case BABY -> 1.0;
-            case WEANLING -> 1.5;
-            case JUVENILE -> 2.0;
-            case ADULT -> 0.0;
-        };
-        return (int) Math.max(0, Math.round(baseTicks * factor / safeSpeed));
-    }
-
     public static double addIntake(double progress, double amount, double required) {
         double result = progress + Math.max(0.0, amount);
         return Math.min(result, required);
     }
 
-    public static boolean canAdvance(GrowthStage stage, double progress, double required,
-                                     int ticksInStage, int requiredTicks) {
+    /**
+     * Whether the animal has earned the next stage. Food is the whole of it.
+     *
+     * There used to be a minimum time in the stage as well, meant to stop a player bucket-feeding a
+     * newborn straight to adult. It did stop that, and it also broke the promise the mod is built
+     * on: a calf that had drunk everything its stage asked for sat there fully fed and did not
+     * grow, waiting on a clock - which is the vanilla behaviour this replaces. What limits growth
+     * is how fast an animal can actually be fed, and that is already limited by the udder, by the
+     * nursing cooldown and by how fast grass grows back.
+     */
+    public static boolean canAdvance(GrowthStage stage, double progress, double required) {
         if (stage == GrowthStage.ADULT) return false;
-        return progress >= required && ticksInStage >= requiredTicks;
+        return progress >= required;
     }
 }

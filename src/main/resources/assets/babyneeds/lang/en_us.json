@@ -12,7 +12,7 @@
   "babyneeds.status.dependents": "  Nursing %s | can lie down again in %ss",
   "babyneeds.status.mother": "  Has a mother nearby | can ask again in %ss",
   "babyneeds.status.orphan": "  Orphan: no mother in range (%ss)",
-  "babyneeds.status.growth": "  To next stage: fed %s%%, grown %s%%",
+  "babyneeds.status.growth": "  To next stage: %s%% fed",
   "babyneeds.msg.baby_only_milk": "A newborn can only drink milk.",
   "babyneeds.msg.too_young_to_milk": "This animal is too young to be milked.",
   "babyneeds.msg.too_young_to_shear": "This animal is too young to be sheared.",

@@ -23,12 +23,6 @@ public class Config {
                     "1.6x and 2.2x this amount, because a bigger animal eats more to grow.")
             .defineInRange("growth.baseStageIntake", 60.0, 1.0, 10000.0);
 
-    public static final ForgeConfigSpec.IntValue BASE_STAGE_TICKS = BUILDER
-            .comment("Minimum ticks a BABY spends in its stage even with unlimited food (6000 = 5",
-                    "real minutes). Later stages use 1.5x and 2.0x. This is what stops a player from",
-                    "bucket-feeding a newborn straight to adult.")
-            .defineInRange("growth.baseStageTicks", 6000, 20, 1000000);
-
     // ---------------------------------------------------------------- hunger
 
     public static final ForgeConfigSpec.DoubleValue HUNGER_DECAY_PER_MINUTE = BUILDER
@@ -167,6 +161,14 @@ public class Config {
                     "on. This is the window for grass to creep back if the herd moves on, so a",
                     "rotated pasture never loses soil at all (24000 = one full in-game day).")
             .defineInRange("pasture.recoveryGraceTicks", 24000, 0, 10000000);
+
+    public static final ForgeConfigSpec.IntValue PASTURE_REGROWTH_DELAY_TICKS = BUILDER
+            .comment("Ticks grazed ground stays bare before vanilla grass is allowed to creep back",
+                    "onto it (24000 = one full in-game day). This is the setting that makes rotation",
+                    "mean anything: vanilla regrows turf in a couple of minutes, which is faster than",
+                    "the ground can be worn out, so without a delay here soil can never be lost at",
+                    "all. 0 hands regrowth back to vanilla and switches pasture wear off in practice.")
+            .defineInRange("pasture.regrowthDelayTicks", 24000, 0, 10000000);
 
     public static final ForgeConfigSpec.IntValue PASTURE_TRAMPLE_THRESHOLD = BUILDER
             .comment("Times an animal must be recorded standing on the same bare block (once per",

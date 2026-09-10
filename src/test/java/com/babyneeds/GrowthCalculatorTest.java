@@ -7,7 +7,6 @@ import static org.junit.Assert.*;
 public class GrowthCalculatorTest {
 
     private static final double BASE_INTAKE = 60.0;
-    private static final int BASE_TICKS = 6000;
     private static final double NORMAL_SPEED = 1.0;
 
     @Test
@@ -38,9 +37,8 @@ public class GrowthCalculatorTest {
     }
 
     @Test
-    public void speedMultiplierScalesBothRequirements() {
+    public void speedMultiplierScalesWhatAStageCosts() {
         assertEquals(30.0, GrowthCalculator.requiredIntake(GrowthStage.BABY, BASE_INTAKE, 2.0), 0.001);
-        assertEquals(3000, GrowthCalculator.requiredTicks(GrowthStage.BABY, BASE_TICKS, 2.0));
     }
 
     @Test
@@ -59,25 +57,20 @@ public class GrowthCalculatorTest {
     }
 
     @Test
-    public void wellFedButTooYoungDoesNotAdvance() {
-        // The whole point of the minimum: food alone cannot rush a stage.
-        assertFalse(GrowthCalculator.canAdvance(GrowthStage.BABY, 60.0, 60.0, 100, BASE_TICKS));
+    public void underfedDoesNotAdvanceNoMatterHowLongItWaits() {
+        // The promise the mod is built on: a calf that never found milk stays a calf. No clock
+        // anywhere can age it up, which is exactly what vanilla does and this replaces.
+        assertFalse(GrowthCalculator.canAdvance(GrowthStage.BABY, 10.0, 60.0));
     }
 
     @Test
-    public void oldEnoughButUnderfedDoesNotAdvance() {
-        // A calf that never found milk stays a calf instead of ageing up on a timer.
-        assertFalse(GrowthCalculator.canAdvance(GrowthStage.BABY, 10.0, 60.0, BASE_TICKS * 10, BASE_TICKS));
-    }
-
-    @Test
-    public void fedAndOldEnoughAdvances() {
-        assertTrue(GrowthCalculator.canAdvance(GrowthStage.BABY, 60.0, 60.0, BASE_TICKS, BASE_TICKS));
+    public void fullyFedAdvances() {
+        assertTrue(GrowthCalculator.canAdvance(GrowthStage.BABY, 60.0, 60.0));
     }
 
     @Test
     public void adultNeverAdvances() {
-        assertFalse(GrowthCalculator.canAdvance(GrowthStage.ADULT, 999.0, 1.0, 999999, 0));
+        assertFalse(GrowthCalculator.canAdvance(GrowthStage.ADULT, 999.0, 1.0));
     }
 
     @Test
