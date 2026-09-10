@@ -26,8 +26,13 @@ public final class MuddyWater {
 
     /** How far out to look when judging how "in the wallow" a spot is. */
     private static final int MUD_PROXIMITY_RADIUS = 3;
-    /** Some mud has to genuinely be near for any murky effect to kick in at all. */
-    private static final double MURK_THRESHOLD = 0.08;
+    /**
+     * The density at which water is as murky as it will get. Low on purpose: the raw reading is an
+     * average over a whole disc, so one muddy bank scores about 0.07 and four score about 0.28.
+     * Saturating here means a single block of mud already makes a puddle visibly dirty and a proper
+     * wallow is solid brown, which is what the mud was always supposed to mean.
+     */
+    public static final double MURK_SATURATION = 0.30;
 
     private MuddyWater() {
     }
@@ -84,8 +89,10 @@ public final class MuddyWater {
      * proper wallow on its own, at {@link Config#SOIL_TO_MUD_TICKS} pace.
      */
     private static void tickSoaking(ServerLevel level, WallowData data, BlockPos pos, long gameTime) {
+        // Any mud within range at all is enough to start soil soaking - one block in contact was
+        // the whole point of the rule.
         BlockState above = level.getBlockState(pos.above());
-        if (!above.is(Blocks.WATER) || mudDensity(level, pos.above()) < MURK_THRESHOLD) {
+        if (!above.is(Blocks.WATER) || mudDensity(level, pos.above()) <= 0.0) {
             data.forget(pos);
             return;
         }

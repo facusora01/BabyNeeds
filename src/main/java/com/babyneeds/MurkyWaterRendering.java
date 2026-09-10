@@ -106,7 +106,8 @@ public final class MurkyWaterRendering {
             // into brown starts from exactly the colour of the water beside it and the pool shades
             // from its banks inwards.
             int clean = BiomeColors.getAverageWaterColor(getter, pos);
-            return MudDensityCalculator.blend(clean, MUD_TINT, MudDensityCalculator.ease(density));
+            double strength = MudDensityCalculator.strength(density, MuddyWater.MURK_SATURATION);
+            return MudDensityCalculator.blend(clean, MUD_TINT, strength);
         }
 
         @Override
@@ -121,7 +122,7 @@ public final class MurkyWaterRendering {
 
             Vector3f clean = base.modifyFogColor(camera, partialTick, level, renderDistance,
                     darkenWorldAmount, fluidFogColor);
-            float towards = (float) MudDensityCalculator.ease(density);
+            float towards = (float) MudDensityCalculator.strength(density, MuddyWater.MURK_SATURATION);
             return new Vector3f(
                     clean.x() + (MUD_FOG.x() - clean.x()) * towards,
                     clean.y() + (MUD_FOG.y() - clean.y()) * towards,
@@ -144,7 +145,7 @@ public final class MurkyWaterRendering {
             // is somewhere a pig can hide.
             base.modifyFogRender(camera, mode, renderDistance, partialTick, nearDistance,
                     farDistance, shape);
-            float eased = (float) MudDensityCalculator.ease(density);
+            float eased = (float) MudDensityCalculator.strength(density, MuddyWater.MURK_SATURATION);
             RenderSystem.setShaderFogStart(-1.0f);
             RenderSystem.setShaderFogEnd(farDistance + (MUD_FOG_END - farDistance) * eased);
         }

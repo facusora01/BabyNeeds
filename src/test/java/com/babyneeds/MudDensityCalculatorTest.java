@@ -35,21 +35,48 @@ public class MudDensityCalculatorTest {
         assertEquals(north, south, 0.0001);
     }
 
+    // ------------------------------------------------------------------ strength
+
+    private static final double SATURATION = 0.30;
+
     @Test
-    public void easeHoldsBothEnds() {
-        assertEquals(0.0, MudDensityCalculator.ease(0.0), 0.0001);
-        assertEquals(1.0, MudDensityCalculator.ease(1.0), 0.0001);
+    public void noMudShowsNothing() {
+        assertEquals(0.0, MudDensityCalculator.strength(0.0, SATURATION), 0.0001);
     }
 
     @Test
-    public void easePassesThroughTheMiddle() {
-        assertEquals(0.5, MudDensityCalculator.ease(0.5), 0.0001);
+    public void reachingSaturationIsFullyMurky() {
+        assertEquals(1.0, MudDensityCalculator.strength(SATURATION, SATURATION), 0.0001);
     }
 
     @Test
-    public void easeClampsOutOfRangeInput() {
-        assertEquals(0.0, MudDensityCalculator.ease(-0.5), 0.0001);
-        assertEquals(1.0, MudDensityCalculator.ease(1.5), 0.0001);
+    public void pastSaturationDoesNotOvershoot() {
+        assertEquals(1.0, MudDensityCalculator.strength(1.0, SATURATION), 0.0001);
+    }
+
+    @Test
+    public void oneMuddyBankAlreadyReadsAsDirtyWater() {
+        // A block of water with a single mud block against one side scores about 0.07 raw, which
+        // taken at face value is a 7% tint - invisible. That was the bug: the mod was measuring the
+        // mud correctly and then showing almost none of it.
+        double oneBank = MudDensityCalculator.strength(0.071, SATURATION);
+        assertTrue("one muddy bank should be plainly visible, was " + oneBank, oneBank > 0.4);
+    }
+
+    @Test
+    public void moreMudIsAlwaysAtLeastAsMurky() {
+        double previous = -1.0;
+        for (double density = 0.0; density <= 0.5; density += 0.01) {
+            double now = MudDensityCalculator.strength(density, SATURATION);
+            assertTrue("murk went backwards at " + density, now >= previous);
+            previous = now;
+        }
+    }
+
+    @Test
+    public void aSaturationOfZeroIsAllOrNothing() {
+        assertEquals(0.0, MudDensityCalculator.strength(0.0, 0.0), 0.0001);
+        assertEquals(1.0, MudDensityCalculator.strength(0.01, 0.0), 0.0001);
     }
 
     // ------------------------------------------------------------------ blend

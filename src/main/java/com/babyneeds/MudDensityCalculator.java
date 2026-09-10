@@ -46,12 +46,23 @@ public final class MudDensityCalculator {
     }
 
     /**
-     * Eases a 0-1 fraction so the middle of the range moves fastest and both ends settle in gently,
-     * instead of every effect scaling at a constant rate all the way across a wallow.
+     * Turns a raw density into how strongly the murk should actually show.
+     *
+     * The raw reading is far too shy to use directly. It is an average over a whole disc, so a
+     * block of water with mud against one side scores about 0.07 - and a wallow only reads as a
+     * wallow once the water is nearly buried in it. What a player means by "there is mud here" is
+     * satisfied long before that: one muddy bank already makes a puddle dirty.
+     *
+     * So the reading is measured against {@code saturation} - the density at which the water should
+     * already be as brown as it gets - and then curved to rise fast and level off, rather than
+     * eased in the middle. A single block of mud reads as clearly dirty water, a proper wallow is
+     * fully brown, and the change between the two is still gradual enough to shade a pool from its
+     * banks inwards.
      */
-    public static double ease(double fraction) {
-        double clamped = Math.max(0.0, Math.min(1.0, fraction));
-        return clamped * clamped * (3.0 - 2.0 * clamped);
+    public static double strength(double density, double saturation) {
+        double clamped = Math.max(0.0, density);
+        if (saturation <= 0.0) return clamped > 0.0 ? 1.0 : 0.0;
+        return Math.sqrt(Math.min(1.0, clamped / saturation));
     }
 
     /**
