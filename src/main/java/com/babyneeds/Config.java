@@ -375,38 +375,38 @@ public class Config {
                     "reaches them out ahead of the chest. Kept apart from the hind pair because an",
                     "animal on its side does not hold all four the same way: the front reach forward",
                     "and the hind trail behind, and one shared number can only ever do one of those.")
-            .defineInRange("animation.lieFrontFold", -1.15, -2.0, 2.0);
+            .defineInRange("animation.lieFrontFold", -0.70, -2.0, 2.0);
 
     public static final ForgeConfigSpec.DoubleValue LIE_HIND_FOLD = BUILDER
             .comment("Rotation of the hind legs while lying down or wallowing, in radians. Positive",
                     "throws them out behind the rump, which is how a pig on its flank actually lies.")
-            .defineInRange("animation.lieHindFold", 0.95, -2.0, 2.0);
+            .defineInRange("animation.lieHindFold", 0.55, -2.0, 2.0);
 
     public static final ForgeConfigSpec.DoubleValue LIE_TOP_LEG_DROOP = BUILDER
             .comment("Extra downward lean, in radians, on the two legs left facing the sky once the",
                     "animal is over on its flank. Nothing holds those two up, so they hang towards",
                     "the ground; without this they stick straight out sideways and the whole pose",
                     "reads as a stiff toy rather than an animal that has flopped down.")
-            .defineInRange("animation.lieTopLegDroop", 0.45, -1.5, 1.5);
+            .defineInRange("animation.lieTopLegDroop", 1.05, -1.5, 1.5);
 
     public static final ForgeConfigSpec.DoubleValue LIE_LEG_SPLAY = BUILDER
             .comment("How far the legs open away from each other while stretched out, in radians.",
                     "A little stops them reading as one flat plank of pig.")
-            .defineInRange("animation.lieLegSplay", 0.38, -1.0, 1.0);
+            .defineInRange("animation.lieLegSplay", 0.60, -1.0, 1.0);
 
     public static final ForgeConfigSpec.DoubleValue LIE_ANGLE = BUILDER
             .comment("How far an animal rolls onto its flank when it lies down, in degrees. 90 is",
                     "flat on its side, which is what a nursing sow needs to be so her litter can",
                     "reach her. This is lying only - a wallowing animal rolls right through upright",
                     "and past it, and takes its angle from wallowRollAngle instead.")
-            .defineInRange("animation.lieAngle", 90.0, 0.0, 180.0);
+            .defineInRange("animation.lieAngle", 96.0, 0.0, 180.0);
 
     public static final ForgeConfigSpec.DoubleValue LIE_LIFT = BUILDER
             .comment("How far the body rises as it rolls, in blocks. This one follows from the",
                     "geometry rather than from taste: rolling a quarter turn about the ground line",
                     "carries the flank half the animal's width below the floor, so the lift has to",
                     "put exactly that back. A pig is 0.9 wide, hence 0.45. Too much and it hovers.")
-            .defineInRange("animation.lieLift", 0.45, -1.0, 1.0);
+            .defineInRange("animation.lieLift", 0.38, -1.0, 1.0);
 
     public static final ForgeConfigSpec.DoubleValue LIE_SECONDS = BUILDER
             .comment("Seconds a full lie-down takes. The client eases across this on its own, so the",

@@ -118,7 +118,9 @@ public class ClientRenderEvents {
         } else {
             // Lying down is not rolling: a sow settling onto her flank really does pivot about the
             // ground she is lying on, and the lift is what keeps her flank from sinking through it.
-            roll = Config.LIE_ANGLE.get().floatValue() * side;
+            // Signed per animal, off the same tick the model reads, so the body goes down on the
+            // flank whose legs are being posed. Every pig lying the same way looked mechanical.
+            roll = LyingSide.roll(Config.LIE_ANGLE.get().floatValue() * side, entry.poseStart());
             axisHeight = 0.0f;
             pose.translate(0.0, Config.LIE_LIFT.get().floatValue() * side * side, 0.0);
         }

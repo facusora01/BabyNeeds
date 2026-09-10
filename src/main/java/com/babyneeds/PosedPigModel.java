@@ -77,7 +77,7 @@ public class PosedPigModel<T extends Pig> extends PigModel<T> {
         // animal is doing wins outright rather than the two being mixed.
         float side = entry.sideProgress();
         if (side > 0.0f) {
-            applyLying(side);
+            applyLying(side, LyingSide.leftOnTop(entry.poseStart()));
             return;
         }
 
@@ -95,7 +95,7 @@ public class PosedPigModel<T extends Pig> extends PigModel<T> {
      * the renderer, because a body rolling over is genuinely one rigid thing turning; what the whole
      * animal cannot do is stretch its own legs out, which is why this half lives in the model.
      */
-    private void applyLying(float side) {
+    private void applyLying(float side, boolean leftOnTop) {
         // Front and hind are posed apart on purpose. An animal down on its flank reaches the front
         // pair out ahead of the chest and trails the hind pair behind the rump; a single shared
         // angle can only ever do one of the two, which left the hind legs pointing the wrong way.
@@ -114,7 +114,7 @@ public class PosedPigModel<T extends Pig> extends PigModel<T> {
         rightHindLeg.zRot = restHindZRot + splay;
         leftHindLeg.zRot = restHindZRot - splay;
 
-        droopTopLegs(side);
+        droopTopLegs(side, leftOnTop);
     }
 
     /**
@@ -125,21 +125,19 @@ public class PosedPigModel<T extends Pig> extends PigModel<T> {
      * Which pair is on top follows from which way it rolled, so the sign of the lying angle picks
      * the side rather than a hard-coded left or right. Flip {@code lieAngle} and the droop follows.
      */
-    private void droopTopLegs(float side) {
+    private void droopTopLegs(float side, boolean leftOnTop) {
         float droop = Config.LIE_TOP_LEG_DROOP.get().floatValue() * side;
         if (droop == 0.0f) return;
 
-        // Rolling one way leaves the left pair up, the other way the right pair. Gravity pulls the
-        // hanging legs back down across the body, which is the opposite sense to the roll.
-        boolean leftOnTop = Config.LIE_ANGLE.get() >= 0.0;
-        float lean = leftOnTop ? -droop : droop;
-
+        // A hanging leg falls across the body, and which turn does that depends on the flank: the
+        // left pair swings one way, the right pair the mirror of it - the same relationship the
+        // splay above already has.
         if (leftOnTop) {
-            leftFrontLeg.zRot += lean;
-            leftHindLeg.zRot += lean;
+            leftFrontLeg.zRot += droop;
+            leftHindLeg.zRot += droop;
         } else {
-            rightFrontLeg.zRot += lean;
-            rightHindLeg.zRot += lean;
+            rightFrontLeg.zRot -= droop;
+            rightHindLeg.zRot -= droop;
         }
     }
 
